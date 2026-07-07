@@ -1,0 +1,13 @@
+# Contexto de build del backend/worker es la raíz del repo:
+# excluir todo lo que la imagen no necesita.
+.git
+.claude
+.env
+frontend
+infra
+node_modules
+**/__pycache__
+**/.venv
+**/*.log
+AI_README.MD
+README.MD

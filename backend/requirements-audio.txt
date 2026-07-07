@@ -1,0 +1,23 @@
+# =============================================================================
+# Audio Inmersivo - Worker. Dependencias pesadas de audio/IA.
+# Solo se instalan en el contenedor worker (INSTALL_AUDIO_DEPS=true):
+# demucs arrastra PyTorch (~2GB), innecesario en la API.
+# =============================================================================
+
+# Extracción
+yt-dlp>=2025.1.1
+
+# Separación de fuentes con IA (incluye torch/torchaudio)
+demucs>=4.0
+
+# Reducción de ruido
+noisereduce>=3.0
+
+# Audio espacial (binaural, Ambisonics)
+spaudiopy>=0.2
+# NOTA: USAT (Universal Spatial Audio Translator) no está en PyPI;
+# se integrará como submódulo/vendored cuando se implemente la etapa spatial.
+
+# Manipulación de señal
+numpy>=1.26
+soundfile>=0.12

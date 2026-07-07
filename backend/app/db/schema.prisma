@@ -1,0 +1,95 @@
+// =============================================================================
+// Audio Inmersivo - Esquema de base de datos (Prisma + PostgreSQL 16)
+// Cliente: prisma-client-py (asyncio)
+// =============================================================================
+
+generator client {
+  provider             = "prisma-client-py"
+  interface            = "asyncio"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums -------------------------------------------------------------------
+
+enum Role {
+  USER
+  SUPERADMIN
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum AudioStatus {
+  PENDING // Registrado, esperando en la cola
+  DOWNLOADING // Extrayendo audio de YouTube (yt-dlp)
+  ENHANCING // Mejora con IA (reducción de ruido, Demucs)
+  SPATIALIZING // Conversión a 3D (binaural / Ambisonics)
+  COMPLETED // Listo para reproducir/descargar
+  FAILED // Error en el pipeline (ver errorMessage)
+}
+
+enum SourceType {
+  YOUTUBE
+  UPLOAD
+}
+
+// --- Modelos -------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  displayName  String   @map("display_name")
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  audios Audio[]
+
+  @@map("users")
+}
+
+model Audio {
+  id       String     @id @default(uuid())
+  title    String
+  ownerId  String     @map("owner_id")
+  owner    User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Origen
+  sourceType SourceType @map("source_type")
+  sourceUrl  String?    @map("source_url") // URL de YouTube si sourceType=YOUTUBE
+
+  // Pipeline de procesamiento
+  status       AudioStatus @default(PENDING)
+  errorMessage String?     @map("error_message")
+
+  // Claves de objetos en MinIO (bucket "audios")
+  originalKey String? @map("original_key") // audio original
+  enhancedKey String? @map("enhanced_key") // audio mejorado con IA
+  spatialKey  String? @map("spatial_key") // audio 3D/binaural final
+
+  // Metadatos de audio
+  durationSeconds Float?  @map("duration_seconds")
+  sampleRate      Int?    @map("sample_rate")
+  format          String? // mp3, wav, flac...
+
+  // Biblioteca
+  visibility Visibility @default(PRIVATE)
+  isApproved Boolean    @default(false) @map("is_approved") // moderación de contenido público
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@index([visibility, isApproved])
+  @@index([status])
+  @@map("audios")
+}

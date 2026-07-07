@@ -1,0 +1,60 @@
+# ENVIRONMENT
+AI_README.MD
+.env
+.env.local
+.env.*.local
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Prisma (cliente generado)
+backend/app/db/generated/
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# PWA (service workers generados)
+frontend/public/sw.js
+frontend/public/workbox-*.js
+
+# Audio / modelos de IA (nunca commitear binarios pesados)
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.ogg
+*.aac
+*.opus
+models/
+checkpoints/
+.cache/
+
+# Docker
+docker-compose.override.yml
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log

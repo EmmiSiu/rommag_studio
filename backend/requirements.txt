@@ -1,0 +1,29 @@
+# =============================================================================
+# Audio Inmersivo - Backend (API). Dependencias base, ligeras.
+# Las dependencias pesadas de audio/IA van en requirements-audio.txt
+# (solo las instala el contenedor worker).
+# =============================================================================
+
+# API
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.32,<1.0
+python-multipart>=0.0.12
+
+# ORM
+prisma>=0.15,<1.0
+
+# Configuración y validación
+pydantic>=2.9,<3.0
+pydantic-settings>=2.6,<3.0
+email-validator>=2.2
+
+# Seguridad
+bcrypt>=4.2,<5.0
+PyJWT>=2.9,<3.0
+
+# Cola de tareas y caché
+celery[redis]>=5.4,<6.0
+redis>=5.2,<6.0
+
+# Almacenamiento de objetos
+minio>=7.2,<8.0
