@@ -14,6 +14,12 @@ from prisma.models import User
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
+_CREDENTIALS_ERROR = HTTPException(
+    status.HTTP_401_UNAUTHORIZED,
+    detail="Token inválido o expirado",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
@@ -26,13 +32,16 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
-        user_id = decode_token(credentials.credentials, expected_type="access")
+        payload = decode_token(credentials.credentials, expected_type="access")
     except jwt.InvalidTokenError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Token inválido o expirado")
+        raise _CREDENTIALS_ERROR
 
-    user = await prisma.user.find_unique(where={"id": user_id})
+    user = await prisma.user.find_unique(where={"id": str(payload["sub"])})
     if user is None or not user.isActive:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Usuario no válido")
+        raise _CREDENTIALS_ERROR
+    # Revocación: un token emitido antes del último cambio de tokenVersion no vale
+    if payload.get("ver") != user.tokenVersion:
+        raise _CREDENTIALS_ERROR
     return user
 
 

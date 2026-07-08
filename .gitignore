@@ -5,6 +5,7 @@ pguide.md
 .env.local
 .env.*.local
 .claude/
+AI_README.md
 
 # Python
 __pycache__/

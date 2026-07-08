@@ -49,8 +49,16 @@ model User {
   displayName  String   @map("display_name")
   role         Role     @default(USER)
   isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Revocación de sesiones: al incrementar, todos los JWT previos quedan inválidos
+  tokenVersion Int @default(0) @map("token_version")
+
+  // Recuperación de contraseña (se guarda el SHA-256 del token, nunca el token plano)
+  passwordResetToken     String?   @unique @map("password_reset_token")
+  passwordResetExpiresAt DateTime? @map("password_reset_expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   audios Audio[]
 
@@ -72,9 +80,15 @@ model Audio {
   errorMessage String?     @map("error_message")
 
   // Claves de objetos en MinIO (bucket "audios")
-  originalKey String? @map("original_key") // audio original
-  enhancedKey String? @map("enhanced_key") // audio mejorado con IA
-  spatialKey  String? @map("spatial_key") // audio 3D/binaural final
+  originalKey   String? @map("original_key") // audio original
+  enhancedKey   String? @map("enhanced_key") // audio mejorado con IA
+  spatialKey    String? @map("spatial_key") // render binaural (audífonos)
+  ambisonicsKey String? @map("ambisonics_key") // render Ambisonics orden 1, AmbiX (altavoces)
+
+  // Stems separados por Demucs: { "vocals": key, "drums": key, "bass": key, "other": key }
+  // Contrato del futuro reproductor 3D interactivo (espacialización en cliente
+  // vía WASM + AudioWorklet): el servidor separa, el navegador posiciona en vivo.
+  stemsKeys Json? @map("stems_keys")
 
   // Metadatos de audio
   durationSeconds Float?  @map("duration_seconds")

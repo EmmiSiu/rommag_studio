@@ -47,6 +47,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379/0
       MINIO_ENDPOINT: minio:9000
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-localhost:9000}
     depends_on:
       postgres:
         condition: service_healthy
@@ -89,8 +90,9 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      # Caché de modelos de IA (Demucs descarga ~2GB la primera vez)
-      - model_cache:/root/.cache
+      # Caché de modelos de IA (Demucs descarga ~2GB la primera vez).
+      # El proceso corre como appuser: su HOME es /home/appuser, no /root.
+      - model_cache:/home/appuser/.cache
     networks:
       - audio-net
 

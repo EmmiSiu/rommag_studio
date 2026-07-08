@@ -20,6 +20,7 @@ email-validator>=2.2
 # Seguridad
 bcrypt>=4.2,<5.0
 PyJWT>=2.9,<3.0
+slowapi>=0.1.9,<1.0
 
 # Cola de tareas y caché
 celery[redis]>=5.4,<6.0

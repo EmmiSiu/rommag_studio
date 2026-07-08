@@ -9,9 +9,9 @@
 | Stage | Nombre | Estado |
 |-------|--------|--------|
 | 0 | Fundaciones (scaffold) | 🟢 |
-| 1 | Backend core | ⚪ |
-| 2 | Pipeline de audio | ⚪ |
-| 3 | Frontend funcional | ⚪ |
+| 1 | Backend core | 🟡 |
+| 2 | Pipeline de audio | 🟡 |
+| 3 | Frontend funcional | 🟡 |
 | 4 | Admin y moderación | ⚪ |
 | 5 | PWA y experiencia móvil | ⚪ |
 | 6 | Calidad: testing y CI/CD | ⚪ |
@@ -40,32 +40,33 @@
 
 ### Sprint 1.1 — Base de datos operativa
 
-- [ ] Primera migración Prisma generada y aplicada (`prisma migrate dev`)
-- [ ] Script de seed: crea el SUPERADMIN desde `SUPERADMIN_EMAIL`/`SUPERADMIN_PASSWORD` (idempotente)
+- [x] Primera migración Prisma generada y aplicada (`20260708153108_init`)
+- [x] Script de seed: crea el SUPERADMIN desde `SUPERADMIN_EMAIL`/`SUPERADMIN_PASSWORD` (idempotente)
 - [ ] `docker compose up` levanta todo el stack sin errores desde cero
-- [ ] Bucket `audios` de MinIO creado automáticamente al arrancar el backend
+- [x] Bucket `audios` de MinIO creado automáticamente al arrancar el backend
 
 ### Sprint 1.2 — Ingesta por subida de archivos
 
-- [ ] `POST /api/v1/audios/upload` con `UploadFile`
-- [ ] Validación de extensión contra `ALLOWED_AUDIO_FORMATS` **y** de contenido real (magic bytes, no solo extensión)
-- [ ] Límite de tamaño `MAX_UPLOAD_SIZE_MB` aplicado por streaming (no cargar todo en RAM)
-- [ ] Subida a MinIO como `originalKey` y encolado de `audio.process`
-- [ ] Nombres de objeto generados por el servidor (UUID), nunca el filename del usuario
+- [x] `POST /api/v1/audios/upload` con `UploadFile`
+- [x] Validación de extensión contra `ALLOWED_AUDIO_FORMATS` **y** de contenido real (magic bytes, no solo extensión)
+- [x] Límite de tamaño `MAX_UPLOAD_SIZE_MB` aplicado por streaming (no cargar todo en RAM)
+- [x] Subida a MinIO como `originalKey` y encolado de `audio.process`
+- [x] Nombres de objeto generados por el servidor (UUID), nunca el filename del usuario
 
 ### Sprint 1.3 — Auth completa
 
-- [ ] `POST /auth/refresh` (rotación de refresh token)
-- [ ] Recuperación de contraseña (token de un solo uso; email puede quedar en log en dev)
-- [ ] Rate limiting en `/auth/login` y `/auth/register` (slowapi o Redis)
-- [ ] Revocación: campo `tokenVersion` en User o denylist en Redis
+- [x] `POST /auth/refresh` (rotación de refresh token)
+- [x] Recuperación de contraseña (token de un solo uso; email puede quedar en log en dev)
+- [x] Rate limiting en `/auth/login` y `/auth/register` (slowapi o Redis)
+- [x] Revocación: campo `tokenVersion` en User o denylist en Redis
 
 ### Sprint 1.4 — API de audios completa
 
-- [ ] `GET /audios/{id}/stream` → URL prefirmada de MinIO del `spatialKey`
-- [ ] `DELETE /audios/{id}` (dueño o superadmin; borra también objetos de MinIO)
-- [ ] `PATCH /audios/{id}` (título, visibility)
-- [ ] `GET /audios/{id}/status` para polling de progreso desde el frontend
+- [x] `GET /audios/{id}/stream` → URL prefirmada de MinIO (con `?variant=` binaural/ambisonics/enhanced/original)
+- [x] `DELETE /audios/{id}` (dueño o superadmin; borra también objetos de MinIO, incluidos stems)
+- [x] `PATCH /audios/{id}` (título, visibility)
+- [x] `GET /audios/{id}/status` para polling de progreso desde el frontend
+- [x] `GET /audios/{id}/stems` → URLs prefirmadas por stem (contrato del reproductor 3D)
 
 **Criterios de salida Stage 1:**
 - [ ] Flujo completo por API (curl/Postman): registro → login → subir archivo → ver en biblioteca privada
@@ -80,38 +81,53 @@
 
 ### Sprint 2.1 — Extracción y normalización
 
-- [ ] `audio.process` actualiza `Audio.status` en cada etapa (DB desde el worker)
-- [ ] Descarga de YouTube con yt-dlp (`audio_services/extractor/youtube.py`) funcionando
-- [ ] Normalización a WAV con FFmpeg + metadatos (duración, sample rate) guardados en DB
-- [ ] Manejo de errores: video privado/geo-bloqueado/eliminado → `FAILED` con `errorMessage` claro
-- [ ] Límite `MAX_AUDIO_DURATION_SECONDS` aplicado antes de procesar
+- [x] `audio.process` actualiza `Audio.status` en cada etapa (DB desde el worker)
+- [x] Descarga de YouTube con yt-dlp (`audio_services/extractor/youtube.py`) funcionando
+- [x] Normalización a WAV con FFmpeg + metadatos (duración, sample rate) guardados en DB
+- [x] Manejo de errores: video privado/geo-bloqueado/eliminado → `FAILED` con `errorMessage` claro
+- [x] Límite `MAX_AUDIO_DURATION_SECONDS` aplicado antes de procesar (0 = sin límite)
 
 ### Sprint 2.2 — Mejora con IA
 
-- [ ] Separación de fuentes con Demucs (`htdemucs`) implementada
-- [ ] Reducción de ruido (noisereduce o stem-based)
-- [ ] Resultado subido a MinIO como `enhancedKey`
+- [x] Separación de fuentes con Demucs (`htdemucs`, configurable vía `DEMUCS_MODEL`) implementada
+- [x] Reducción de ruido (noisereduce conservador, `prop_decrease=0.5`)
+- [x] Resultado subido a MinIO como `enhancedKey`; stems subidos como `stemsKeys` (JSON)
 - [ ] Caché de modelos en volumen `model_cache` verificada (segunda ejecución no re-descarga)
 - [ ] Medir tiempos/RAM por pista de 4 min y documentarlos aquí: ____ min / ____ GB
 
 ### Sprint 2.3 — Espacialización 3D
 
-- [ ] Render binaural con spaudiopy (stems posicionados en el campo sonoro + HRTF)
-- [ ] Codificación Ambisonics (orden 1, formato AmbiX)
-- [ ] Evaluación de USAT: ¿se integra o se descarta? Decisión documentada: ____
-- [ ] Resultado final subido como `spatialKey`, status `COMPLETED`
+- [x] Render binaural con spaudiopy (stems posicionados en el campo sonoro + HRTF)
+- [x] Codificación Ambisonics (orden 1, formato AmbiX) → `ambisonicsKey`
+- [x] Evaluación de USAT: ¿se integra o se descarta? Decisión documentada: **descartado en v1** (no está en PyPI; FOA + binaural se resuelven con spaudiopy y codificación AmbiX propia — ver nota al pie)
+- [x] Resultado final subido como `spatialKey`, status `COMPLETED`
 
 ### Sprint 2.4 — Robustez del pipeline
 
-- [ ] Reintentos solo en errores transitorios (red, MinIO); fallos permanentes no reintentan
-- [ ] Limpieza de archivos temporales del worker (incluso en fallo — `finally`)
-- [ ] Timeout por tarea validado (`task_time_limit`)
+- [x] Reintentos solo en errores transitorios (red, MinIO); fallos permanentes no reintentan
+- [x] Limpieza de archivos temporales del worker (incluso en fallo — `finally`)
+- [x] Timeout por tarea validado (`task_time_limit=1800`)
 - [ ] Prueba de carga: 5 audios encolados a la vez, ninguno se pierde ni corrompe
 
 **Criterios de salida Stage 2:**
 - [ ] URL de YouTube → audio binaural escuchable con auriculares en < 15 min (pista de 4 min, CPU)
 - [ ] Archivo subido → mismo resultado
 - [ ] Un fallo de pipeline deja registro claro (`errorMessage`) y no tumba el worker
+
+> **📌 Decisiones de arquitectura (Stage 2 — julio 2026):**
+> 1. **Contrato de stems (WASM-ready):** los stems de Demucs se persisten individualmente
+>    en MinIO (`Audio.stemsKeys` JSON + `GET /audios/{id}/stems`). Motivo: habilitar el
+>    futuro reproductor 3D interactivo con espacialización **en el cliente** (Rust→WASM
+>    en AudioWorklet, convolución HRTF en vivo). El servidor separa; el navegador posiciona.
+>    El render binaural/Ambisonics de servidor se mantiene para descarga y compatibilidad.
+> 2. **Orden del enhancement:** denoise (noisereduce, conservador) sobre el mix normalizado
+>    → `enhancedKey`; Demucs corre sobre el WAV **sin** denoise (rinde mejor con señal
+>    cruda; el ruido residual cae en el stem `other`). Revisar con métricas reales.
+> 3. **USAT descartado en v1:** no está en PyPI; binaural por convolución HRIR (spaudiopy)
+>    y FOA AmbiX (ACN/SN3D) codificado manualmente cubren el alcance actual.
+> 4. **Staging de la escena:** vocals al frente (0°±15°), bass centrado (0°±5°), drums
+>    detrás (180°±40°), other abierto (0°±70°) — tabla `STEM_STAGING` en
+>    `audio_services/spatial/binaural.py`, pendiente de ajuste por escucha.
 
 ---
 
@@ -121,24 +137,24 @@
 
 ### Sprint 3.1 — Auth UI
 
-- [ ] Páginas `/register` y `/login` con validación de formularios
-- [ ] Manejo de sesión (tokens en memoria + refresh; evitar localStorage para el access token)
-- [ ] Rutas protegidas (middleware de Next.js) y logout
-- [ ] Estados de error legibles (credenciales inválidas, cuenta desactivada)
+- [x] Páginas `/register` y `/login` con validación de formularios
+- [x] Manejo de sesión (access token solo en memoria + refresh en localStorage con rotación; cookie ligera `ai_session` sin token para el middleware)
+- [x] Rutas protegidas (middleware de Next.js) y logout
+- [x] Estados de error legibles (credenciales inválidas, cuenta desactivada, rate limit)
 
 ### Sprint 3.2 — Ingesta y progreso
 
-- [ ] Página "Nuevo audio": tab URL de YouTube / tab subir archivo (drag & drop)
-- [ ] Barra de progreso de subida
-- [ ] Vista de estado del pipeline en vivo (polling a `/status`): Descargando → Mejorando → Espacializando
-- [ ] Notificación al completar o fallar
+- [x] Página "Nuevo audio": tab URL de YouTube / tab subir archivo (drag & drop)
+- [x] Barra de progreso de subida (XHR con `upload.onprogress`)
+- [x] Vista de estado del pipeline en vivo (polling a `/status`): Descargando → Mejorando → Espacializando
+- [x] Notificación al completar o fallar
 
 ### Sprint 3.3 — Biblioteca y reproductor
 
-- [ ] Biblioteca privada y pública con paginación
-- [ ] Reproductor de audio (streaming desde URL prefirmada)
-- [ ] Descarga del resultado (binaural / Ambisonics)
-- [ ] Cambiar visibilidad y eliminar audios propios
+- [x] Biblioteca privada y pública con paginación
+- [x] Reproductor de audio (streaming desde URL prefirmada, selector de variante binaural/mejorado/original)
+- [x] Descarga del resultado (binaural / Ambisonics / stems individuales)
+- [x] Cambiar visibilidad y eliminar audios propios
 
 **Criterios de salida Stage 3:**
 - [ ] Flujo E2E completo sin tocar la API a mano
@@ -158,9 +174,10 @@
 
 ### Sprint 4.2 — Endpoints de admin
 
-- [ ] `PATCH /users/{id}` y `DELETE /users/{id}` (con `require_superadmin`)
-- [ ] `PATCH /audios/{id}/moderate` (aprobar/rechazar con motivo)
-- [ ] Auditoría mínima: log de acciones de admin
+- [x] `PATCH /users/{id}` y `DELETE /users/{id}` (con `require_superadmin`; borra también objetos MinIO; anti-lockout: un admin no puede degradarse a sí mismo)
+- [x] `PATCH /audios/{id}/moderate` (aprobar/rechazar con motivo; rechazo → vuelve a PRIVATE) + `GET /audios/moderation/queue`
+- [x] Auditoría mínima: logger `audit.admin` con email del admin, acción y objetivo
+- [x] `GET /admin/metrics` (usuarios, audios por estado, cola de moderación)
 
 **Criterios de salida Stage 4:**
 - [ ] Un audio PUBLIC no aparece en la biblioteca pública hasta ser aprobado

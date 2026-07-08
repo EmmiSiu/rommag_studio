@@ -19,16 +19,23 @@ COPY backend/requirements.txt backend/requirements-audio.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 ARG INSTALL_AUDIO_DEPS=false
+# torch CPU-only primero: el default de PyPI arrastra CUDA (~7GB de librerías
+# nvidia) que un worker CPU jamás usa. Ahorro: ~6GB de imagen.
 RUN if [ "$INSTALL_AUDIO_DEPS" = "true" ]; then \
-        pip install --no-cache-dir -r requirements-audio.txt; \
+        pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu \
+        && pip install --no-cache-dir -r requirements-audio.txt; \
     fi
 
 # Código de la aplicación
 COPY backend/app ./app
 COPY audio_services ./audio_services
 
-# Generar el cliente Prisma
-RUN prisma generate --schema app/db/schema.prisma
+# Generar el cliente Prisma. Los binarios del query engine van a una ruta
+# global legible por appuser (el default ~/.cache/prisma-python quedaría en
+# /root y sería ilegible al cambiar de usuario).
+ENV PRISMA_BINARY_CACHE_DIR=/opt/prisma-binaries
+RUN prisma generate --schema app/db/schema.prisma \
+    && chmod -R a+rX /opt/prisma-binaries
 
 EXPOSE 8000
 

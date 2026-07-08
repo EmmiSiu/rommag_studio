@@ -10,16 +10,23 @@ from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from starlette.concurrency import run_in_threadpool
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.core.ratelimit import limiter
 from app.db.client import prisma
+from app.services.storage import get_storage
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Ciclo de vida: conecta/desconecta recursos externos (12-Factor: backing services)."""
     await prisma.connect()
+    # El cliente MinIO es síncrono: no bloquear el event loop
+    await run_in_threadpool(get_storage().ensure_bucket)
     yield
     await prisma.disconnect()
 
@@ -34,6 +41,10 @@ def create_app() -> FastAPI:
         docs_url="/docs" if settings.APP_ENV == "development" else None,
         redoc_url=None,
     )
+
+    # Rate limiting (slowapi): los límites se declaran por endpoint
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     app.add_middleware(
         CORSMiddleware,

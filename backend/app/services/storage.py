@@ -2,6 +2,10 @@
 
 Único punto de contacto con MinIO (Dependency Inversion: si mañana se
 migra a AWS S3, solo cambia este módulo).
+
+Dos clientes: uno con el endpoint interno (operaciones desde la red
+Docker) y otro con el endpoint público (firmar URLs que abrirá el
+navegador — la firma S3 depende del host, no son intercambiables).
 """
 
 from datetime import timedelta
@@ -22,6 +26,12 @@ class StorageService:
             secret_key=settings.MINIO_ROOT_PASSWORD,
             secure=settings.MINIO_USE_SSL,
         )
+        self._presign_client = Minio(
+            settings.MINIO_PUBLIC_ENDPOINT,
+            access_key=settings.MINIO_ROOT_USER,
+            secret_key=settings.MINIO_ROOT_PASSWORD,
+            secure=settings.MINIO_USE_SSL,
+        )
         self._bucket = settings.MINIO_BUCKET_AUDIO
 
     def ensure_bucket(self) -> None:
@@ -29,7 +39,7 @@ class StorageService:
         if not self._client.bucket_exists(self._bucket):
             self._client.make_bucket(self._bucket)
 
-    def upload_file(self, local_path: Path, object_key: str, content_type: str = "audio/mpeg") -> str:
+    def upload_file(self, local_path: Path, object_key: str, content_type: str = "application/octet-stream") -> str:
         """Sube un archivo local y devuelve su clave de objeto."""
         self._client.fput_object(self._bucket, object_key, str(local_path), content_type=content_type)
         return object_key
@@ -39,9 +49,15 @@ class StorageService:
         self._client.fget_object(self._bucket, object_key, str(local_path))
         return local_path
 
+    def remove_objects(self, object_keys: list[str]) -> None:
+        """Elimina objetos (ignora claves None/inexistentes: borrado idempotente)."""
+        for key in object_keys:
+            if key:
+                self._client.remove_object(self._bucket, key)
+
     def get_presigned_url(self, object_key: str, expires_hours: int = 1) -> str:
-        """URL firmada temporal para streaming/descarga desde el frontend."""
-        return self._client.presigned_get_object(
+        """URL firmada temporal para streaming/descarga desde el navegador."""
+        return self._presign_client.presigned_get_object(
             self._bucket, object_key, expires=timedelta(hours=expires_hours)
         )
 

@@ -27,6 +27,8 @@ class Settings(BaseSettings):
 
     # MinIO
     MINIO_ENDPOINT: str = "localhost:9000"
+    # Endpoint que ve el NAVEGADOR (las URLs prefirmadas se firman contra este host)
+    MINIO_PUBLIC_ENDPOINT: str = "localhost:9000"
     MINIO_ROOT_USER: str
     MINIO_ROOT_PASSWORD: str
     MINIO_BUCKET_AUDIO: str = "audios"
@@ -46,6 +48,9 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 200
     MAX_AUDIO_DURATION_SECONDS: int = 3600
     ALLOWED_AUDIO_FORMATS: str = "mp3,wav,flac,m4a,ogg,aac,opus,wma"
+
+    # Pipeline de IA (solo lo usa el worker)
+    DEMUCS_MODEL: str = "htdemucs"
 
     @property
     def cors_origins_list(self) -> list[str]:

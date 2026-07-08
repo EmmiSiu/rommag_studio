@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Nav } from "@/components/nav";
+
 /**
  * Landing page pública de Audio Inmersivo.
  * Server Component: no necesita estado ni interactividad de cliente.
@@ -35,6 +37,7 @@ const FEATURES = [
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
+      <Nav />
       {/* Hero */}
       <section className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-6 pt-24 pb-16 text-center">
         <span className="rounded-full border border-violet-500/40 bg-violet-500/10 px-4 py-1 text-sm text-violet-300">

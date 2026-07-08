@@ -26,6 +26,42 @@ class AudioCreateFromYouTube(BaseModel):
         return v
 
 
+class AudioUpdate(BaseModel):
+    """Payload de edición: solo campos gestionables por el dueño."""
+
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    visibility: Literal["PUBLIC", "PRIVATE"] | None = None
+
+
+class ModerationDecision(BaseModel):
+    """Decisión de moderación sobre un audio público (solo SUPERADMIN)."""
+
+    approve: bool
+    reason: str | None = Field(default=None, max_length=500)
+
+
+class AudioStatusOut(BaseModel):
+    """Estado del pipeline (respuesta de polling)."""
+
+    id: str
+    status: str
+    error_message: str | None
+
+
+class StreamURL(BaseModel):
+    """URL prefirmada temporal para streaming/descarga."""
+
+    url: str
+    expires_in_seconds: int
+
+
+class StemsOut(BaseModel):
+    """URLs prefirmadas de los stems separados (contrato del reproductor 3D)."""
+
+    stems: dict[str, str]
+    expires_in_seconds: int
+
+
 class AudioPublic(BaseModel):
     """Representación pública de un audio."""
 
@@ -39,6 +75,8 @@ class AudioPublic(BaseModel):
     duration_seconds: float | None
     format: str | None
     error_message: str | None
+    has_stems: bool
+    has_ambisonics: bool
     created_at: datetime
 
     @classmethod
@@ -54,5 +92,7 @@ class AudioPublic(BaseModel):
             duration_seconds=audio.durationSeconds,
             format=audio.format,
             error_message=audio.errorMessage,
+            has_stems=bool(audio.stemsKeys),
+            has_ambisonics=audio.ambisonicsKey is not None,
             created_at=audio.createdAt,
         )

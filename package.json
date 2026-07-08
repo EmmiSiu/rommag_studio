@@ -10,6 +10,7 @@
     "down": "docker compose down",
     "logs": "docker compose logs -f",
     "db:migrate": "docker compose exec backend prisma migrate deploy --schema app/db/schema.prisma",
+    "db:seed": "docker compose exec backend python -m app.scripts.seed",
     "db:migrate:dev": "docker compose exec backend prisma migrate dev --schema app/db/schema.prisma",
     "db:studio": "docker compose exec backend prisma studio --schema app/db/schema.prisma",
     "frontend:dev": "npm --prefix frontend run dev",

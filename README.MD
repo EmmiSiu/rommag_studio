@@ -222,7 +222,9 @@ erDiagram
         AudioStatus status "PENDING → ... → COMPLETED"
         string originalKey "objeto MinIO"
         string enhancedKey "objeto MinIO"
-        string spatialKey "objeto MinIO"
+        string spatialKey "render binaural"
+        string ambisonicsKey "render AmbiX orden 1"
+        json stemsKeys "stems Demucs (reproductor 3D)"
         float durationSeconds
         Visibility visibility "PUBLIC | PRIVATE"
         boolean isApproved "moderación"
