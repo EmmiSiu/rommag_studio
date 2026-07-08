@@ -181,11 +181,8 @@ export default function NewAudioPage() {
         </form>
       ) : (
         <form onSubmit={submitUpload} className="mt-6 flex flex-col gap-4">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+          <label
+            htmlFor="audio-file"
             onDragOver={(e) => {
               e.preventDefault();
               setDragging(true);
@@ -212,13 +209,14 @@ export default function NewAudioPage() {
             )}
             <p className="text-xs text-slate-500">mp3, wav, flac, m4a, ogg, aac, opus, wma</p>
             <input
+              id="audio-file"
               ref={fileInputRef}
               type="file"
               accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg,.aac,.opus,.wma"
-              className="hidden"
+              className="sr-only"
               onChange={(e) => acceptFile(e.target.files?.[0])}
             />
-          </div>
+          </label>
           <label className="flex flex-col gap-1 text-sm">
             Título (opcional; por defecto el nombre del archivo)
             <input

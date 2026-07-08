@@ -31,6 +31,11 @@ export function Nav() {
               <Link href="/studio/library" className="rounded px-2 py-1 text-slate-300 hover:text-white">
                 Mi biblioteca
               </Link>
+              {user.role === "SUPERADMIN" && (
+                <Link href="/studio/admin" className="rounded px-2 py-1 text-amber-300 hover:text-amber-200">
+                  Admin
+                </Link>
+              )}
               <Link
                 href="/studio/new"
                 className="rounded-lg bg-violet-600 px-3 py-1.5 font-semibold hover:bg-violet-500"

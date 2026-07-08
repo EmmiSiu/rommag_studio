@@ -11,6 +11,8 @@ yt-dlp>=2025.1.1
 # desde el índice CPU de PyTorch (ver backend/Dockerfile); el default de
 # PyPI arrastra ~7GB de librerías CUDA innecesarias en un worker CPU.
 demucs>=4.0
+# NOTA: torchcodec (requerido por torchaudio>=2.9 para save/load) se instala
+# en el Dockerfile desde el índice CPU de PyTorch; el de PyPI exige CUDA.
 
 # Reducción de ruido
 noisereduce>=3.0
@@ -20,7 +22,13 @@ spaudiopy>=0.2
 # NOTA: USAT (Universal Spatial Audio Translator) no está en PyPI;
 # se integrará como submódulo/vendored cuando se implemente la etapa spatial.
 
-# Manipulación de señal
-numpy>=1.26
+# Manipulación de señal.
+# numpy<2: spaudiopy 0.2.x crashea generando los HRIRs por defecto con
+# numpy 2.x (conversión implícita de arrays size-1 eliminada). Verificado
+# el 2026-07-08; revisar al actualizar spaudiopy.
+numpy>=1.26,<2.0
 soundfile>=0.12
-scipy>=1.12
+# scipy<1.15: spaudiopy 0.2.x usa scipy.special.sph_harm, eliminado en 1.15+
+scipy>=1.12,<1.15
+# Lo usa el descargador de HRIRs de spaudiopy en build time (ver Dockerfile)
+requests>=2.31

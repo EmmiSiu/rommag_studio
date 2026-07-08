@@ -7,7 +7,7 @@
  */
 
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 import { StatusBadge, formatDuration } from "@/components/audio-card";
 import {
@@ -38,6 +38,153 @@ const STEP_ORDER: Record<string, number> = {
   SPATIALIZING: 3,
   COMPLETED: 4,
 };
+
+const STREAM_VARIANTS = [
+  { key: "auto", label: "Mejor disponible" },
+  { key: "binaural", label: "Binaural 3D" },
+  { key: "enhanced", label: "Mejorado" },
+  { key: "original", label: "Original" },
+] satisfies Array<{ key: StreamVariant; label: string }>;
+
+const MEDIA_SESSION_ACTIONS: MediaSessionAction[] = [
+  "play",
+  "pause",
+  "seekbackward",
+  "seekforward",
+  "seekto",
+  "stop",
+];
+
+function getVariantLabel(variant: StreamVariant): string {
+  return STREAM_VARIANTS.find((item) => item.key === variant)?.label ?? "Audio";
+}
+
+function clampPosition(value: number, duration: number): number {
+  return Math.max(0, Math.min(value, duration));
+}
+
+function setMediaSessionAction(
+  mediaSession: MediaSession,
+  action: MediaSessionAction,
+  handler: MediaSessionActionHandler | null,
+) {
+  try {
+    mediaSession.setActionHandler(action, handler);
+  } catch {
+    /* Acción no soportada por el navegador actual. */
+  }
+}
+
+function useAudioMediaSession({
+  audio,
+  audioRef,
+  streamSrc,
+  variant,
+}: {
+  audio: AudioPublic | null;
+  audioRef: RefObject<HTMLAudioElement | null>;
+  streamSrc: string | null;
+  variant: StreamVariant;
+}) {
+  useEffect(() => {
+    if (!audio || !streamSrc || typeof navigator === "undefined" || !("mediaSession" in navigator)) {
+      return;
+    }
+
+    const player = audioRef.current;
+    if (!player) return;
+
+    const mediaSession = navigator.mediaSession;
+    if (typeof MediaMetadata !== "undefined") {
+      mediaSession.metadata = new MediaMetadata({
+        title: audio.title,
+        artist: "Audio Inmersivo",
+        album: getVariantLabel(variant),
+        artwork: [
+          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+        ],
+      });
+    }
+
+    const syncPlaybackState = () => {
+      mediaSession.playbackState = player.paused ? "paused" : "playing";
+    };
+
+    const syncPositionState = () => {
+      if (!Number.isFinite(player.duration) || player.duration <= 0) return;
+      if (typeof mediaSession.setPositionState !== "function") return;
+      try {
+        mediaSession.setPositionState({
+          duration: player.duration,
+          playbackRate: player.playbackRate || 1,
+          position: clampPosition(player.currentTime, player.duration),
+        });
+      } catch {
+        /* Algunos navegadores rechazan estados intermedios durante el cambio de src. */
+      }
+    };
+
+    const seekBy = (offset: number) => {
+      if (!Number.isFinite(player.duration) || player.duration <= 0) return;
+      player.currentTime = clampPosition(player.currentTime + offset, player.duration);
+      syncPositionState();
+    };
+
+    setMediaSessionAction(mediaSession, "play", () => void player.play().catch(() => undefined));
+    setMediaSessionAction(mediaSession, "pause", () => player.pause());
+    setMediaSessionAction(mediaSession, "seekbackward", (details) => seekBy(-(details.seekOffset ?? 10)));
+    setMediaSessionAction(mediaSession, "seekforward", (details) => seekBy(details.seekOffset ?? 10));
+    setMediaSessionAction(mediaSession, "seekto", (details) => {
+      if (details.seekTime === undefined || !Number.isFinite(player.duration)) return;
+      const nextTime = clampPosition(details.seekTime, player.duration);
+      if (details.fastSeek && typeof player.fastSeek === "function") {
+        player.fastSeek(nextTime);
+      } else {
+        player.currentTime = nextTime;
+      }
+      syncPositionState();
+    });
+    setMediaSessionAction(mediaSession, "stop", () => {
+      player.pause();
+      if (Number.isFinite(player.duration) && player.duration > 0) {
+        player.currentTime = 0;
+        syncPositionState();
+      }
+    });
+
+    const markEnded = () => {
+      mediaSession.playbackState = "none";
+      syncPositionState();
+    };
+
+    player.addEventListener("play", syncPlaybackState);
+    player.addEventListener("pause", syncPlaybackState);
+    player.addEventListener("loadedmetadata", syncPositionState);
+    player.addEventListener("durationchange", syncPositionState);
+    player.addEventListener("ratechange", syncPositionState);
+    player.addEventListener("timeupdate", syncPositionState);
+    player.addEventListener("ended", markEnded);
+
+    syncPlaybackState();
+    syncPositionState();
+
+    return () => {
+      player.removeEventListener("play", syncPlaybackState);
+      player.removeEventListener("pause", syncPlaybackState);
+      player.removeEventListener("loadedmetadata", syncPositionState);
+      player.removeEventListener("durationchange", syncPositionState);
+      player.removeEventListener("ratechange", syncPositionState);
+      player.removeEventListener("timeupdate", syncPositionState);
+      player.removeEventListener("ended", markEnded);
+      MEDIA_SESSION_ACTIONS.forEach((action) => {
+        setMediaSessionAction(mediaSession, action, null);
+      });
+      mediaSession.metadata = null;
+      mediaSession.playbackState = "none";
+    };
+  }, [audio, audioRef, streamSrc, variant]);
+}
 
 function PipelineProgress({ status }: { status: string }) {
   const current = STEP_ORDER[status] ?? 0;
@@ -82,6 +229,8 @@ export default function AudioDetailPage() {
   const [streamSrc, setStreamSrc] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useAudioMediaSession({ audio, audioRef, streamSrc, variant });
 
   const isProcessing =
     audio !== null && audio.status !== "COMPLETED" && audio.status !== "FAILED";
@@ -233,14 +382,7 @@ export default function AudioDetailPage() {
           El render binaural está pensado para audífonos 🎧
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {(
-            [
-              ["auto", "Mejor disponible"],
-              ["binaural", "Binaural 3D"],
-              ["enhanced", "Mejorado"],
-              ["original", "Original"],
-            ] as const
-          ).map(([key, label]) => (
+          {STREAM_VARIANTS.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => void play(key)}

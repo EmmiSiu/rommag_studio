@@ -26,4 +26,7 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,
     # Límite duro por tarea (evita jobs zombis): 30 minutos
     task_time_limit=1800,
+    # Prisma lanza su query engine con subprocess y necesita sys.stdout.fileno();
+    # el LoggingProxy que Celery inyecta por defecto no lo tiene.
+    worker_redirect_stdouts=False,
 )

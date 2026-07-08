@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   description:
     "Plataforma auto-alojada para mejorar audio con IA y convertirlo a 3D inmersivo (binaural, Ambisonics).",
   manifest: "/manifest.json",
+  // iOS ignora el manifest para el icono de "Añadir a pantalla de inicio"
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

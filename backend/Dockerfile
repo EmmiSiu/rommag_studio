@@ -19,11 +19,17 @@ COPY backend/requirements.txt backend/requirements-audio.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 ARG INSTALL_AUDIO_DEPS=false
-# torch CPU-only primero: el default de PyPI arrastra CUDA (~7GB de librerías
-# nvidia) que un worker CPU jamás usa. Ahorro: ~6GB de imagen.
+# torch CPU-only en su propia capa (es lo más pesado; así los cambios en
+# requirements-audio.txt no lo re-descargan). El default de PyPI arrastra
+# ~7GB de librerías CUDA que un worker CPU jamás usa.
 RUN if [ "$INSTALL_AUDIO_DEPS" = "true" ]; then \
-        pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu \
-        && pip install --no-cache-dir -r requirements-audio.txt; \
+        pip install --no-cache-dir torch torchaudio torchcodec --index-url https://download.pytorch.org/whl/cpu; \
+    fi
+# Los HRIRs por defecto de spaudiopy se generan AQUÍ (escriben en
+# site-packages, que en runtime es solo-lectura para appuser).
+RUN if [ "$INSTALL_AUDIO_DEPS" = "true" ]; then \
+        pip install --no-cache-dir -r requirements-audio.txt \
+        && python -c "from spaudiopy.io import get_default_hrirs; get_default_hrirs()"; \
     fi
 
 # Código de la aplicación
@@ -40,7 +46,10 @@ RUN prisma generate --schema app/db/schema.prisma \
 EXPOSE 8000
 
 # Usuario sin privilegios (seguridad: no correr como root)
-RUN useradd --create-home appuser && chown -R appuser:appuser /srv
+RUN useradd --create-home appuser && chown -R appuser:appuser /srv \
+    # Pre-crear ~/.cache con dueño correcto: el volumen model_cache hereda
+    # esta propiedad en su primer montaje (si no, nace root y torch no escribe)
+    && mkdir -p /home/appuser/.cache && chown appuser:appuser /home/appuser/.cache
 USER appuser
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

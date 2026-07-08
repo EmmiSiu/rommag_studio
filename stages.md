@@ -9,12 +9,12 @@
 | Stage | Nombre | Estado |
 |-------|--------|--------|
 | 0 | Fundaciones (scaffold) | 🟢 |
-| 1 | Backend core | 🟡 |
+| 1 | Backend core | ✅ |
 | 2 | Pipeline de audio | 🟡 |
 | 3 | Frontend funcional | 🟡 |
-| 4 | Admin y moderación | ⚪ |
-| 5 | PWA y experiencia móvil | ⚪ |
-| 6 | Calidad: testing y CI/CD | ⚪ |
+| 4 | Admin y moderación | 🟡 |
+| 5 | PWA y experiencia móvil | 🟡 |
+| 6 | Calidad: testing y CI/CD | 🟡 |
 | 7 | Producción (Easypanel) | ⚪ |
 
 ---
@@ -69,9 +69,9 @@
 - [x] `GET /audios/{id}/stems` → URLs prefirmadas por stem (contrato del reproductor 3D)
 
 **Criterios de salida Stage 1:**
-- [ ] Flujo completo por API (curl/Postman): registro → login → subir archivo → ver en biblioteca privada
-- [ ] Ninguna credencial ni secreto hardcodeado (auditar con `git grep`)
-- [ ] Documentación OpenAPI (`/docs`) coherente con todos los endpoints
+- [x] Flujo completo por API (curl/Postman): registro → login → subir archivo → ver en biblioteca privada *(verificado 2026-07-08)*
+- [x] Ninguna credencial ni secreto hardcodeado (auditado con `git grep`)
+- [x] Documentación OpenAPI (`/docs`) coherente: 16 rutas documentadas
 
 ---
 
@@ -167,10 +167,10 @@
 
 ### Sprint 4.1 — Panel superadmin
 
-- [ ] Dashboard `/admin` (solo SUPERADMIN, verificado en backend, no solo UI)
-- [ ] Gestión de usuarios: listar, activar/desactivar, cambiar rol, eliminar
-- [ ] Cola de moderación: aprobar/rechazar audios públicos (`isApproved`)
-- [ ] Métricas básicas: nº usuarios, audios por estado, almacenamiento usado
+- [x] Dashboard `/studio/admin` (solo SUPERADMIN, verificado en backend en cada endpoint, no solo UI)
+- [x] Gestión de usuarios: listar, activar/desactivar, cambiar rol, eliminar
+- [x] Cola de moderación: aprobar/rechazar audios públicos (`isApproved`) con pre-escucha
+- [x] Métricas básicas: nº usuarios, audios por estado, cola de moderación (almacenamiento: proxy de duración acumulada; bytes exactos pendiente)
 
 ### Sprint 4.2 — Endpoints de admin
 
@@ -189,15 +189,15 @@
 
 ### Sprint 5.1 — PWA instalable
 
-- [ ] Iconos PNG 192/512 + `apple-touch-icon` (iOS no usa el SVG)
-- [ ] Service worker con Serwist (`@serwist/next`): shell offline + caché de estáticos
-- [ ] Instalable en Android (Chrome) e iOS (Safari "Añadir a pantalla de inicio") — probado en dispositivo real
-- [ ] Página offline de cortesía
+- [x] Iconos PNG 192/512 + `apple-touch-icon` 180 (generados del diseño del SVG)
+- [x] Service worker con Serwist (`@serwist/next`): precache del shell + estrategias por defecto; audios excluidos (URLs prefirmadas). Solo activo en producción
+- [ ] Instalable en Android (Chrome) e iOS (Safari "Añadir a pantalla de inicio") — probado en dispositivo real *(requiere HTTPS + dispositivo: pendiente de Stage 7)*
+- [x] Página offline de cortesía (`/offline`, fallback de navegación del SW)
 
 ### Sprint 5.2 — Pulido móvil
 
-- [ ] Reproductor usable con pantalla bloqueada (Media Session API)
-- [ ] Subida de archivos desde el picker móvil funciona
+- [x] Reproductor usable con pantalla bloqueada (Media Session API: metadata, play/pausa y seek nativos)
+- [ ] Subida de archivos desde el picker móvil funciona (UI ajustada a `<label>` nativo; falta prueba en dispositivo real)
 - [ ] Lighthouse PWA ≥ 90
 
 **Criterios de salida Stage 5:**
@@ -212,20 +212,20 @@
 - [ ] pytest configurado con DB de test (fixtures)
 - [ ] Tests de auth (registro, login, token expirado, roles)
 - [ ] Tests de permisos de audios (dueño/público/privado/admin)
-- [ ] Tests unitarios de `audio_services/utils` (ffmpeg probe, validaciones)
+- [x] Tests unitarios de validación de subidas (magic bytes, sanitización) — 19 tests en `backend/tests/`; ffmpeg probe pendiente
 - [ ] Cobertura ≥ 70% en `app/` (excluyendo workers pesados)
 
 ### Sprint 6.2 — Tests frontend
 
-- [ ] `npm run typecheck` y `lint` sin errores
+- [x] `npm run typecheck` y `lint` sin errores (ESLint CLI + `tsc --noEmit`, verificado 2026-07-08)
 - [ ] Tests de componentes críticos (auth forms, uploader) con Vitest/Testing Library
 - [ ] Un test E2E del flujo feliz con Playwright (contra stack de compose)
 
 ### Sprint 6.3 — CI/CD (GitHub Actions)
 
-- [ ] Workflow CI: lint + typecheck + tests backend y frontend en cada PR
-- [ ] Build de imágenes Docker en CI (valida que los Dockerfiles no se rompan)
-- [ ] Badge de CI en README
+- [x] Workflow CI: lint + typecheck + build frontend, compileall + pytest backend en cada PR (`.github/workflows/ci.yml`)
+- [x] Build de imagen Docker backend en CI (valida Dockerfile + prisma generate)
+- [x] Badge de CI en README
 - [ ] (Opcional) push de imágenes a GHCR con tag por commit
 
 **Criterios de salida Stage 6:**

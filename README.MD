@@ -12,6 +12,7 @@
 [![Redis](https://img.shields.io/badge/Redis_7-FF4438?logo=redis&logoColor=white)](https://redis.io)
 [![Docker](https://img.shields.io/badge/Docker_Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/EmmiSiu/rommag_studio/actions/workflows/ci.yml/badge.svg)](https://github.com/EmmiSiu/rommag_studio/actions/workflows/ci.yml)
 
 *YouTube o archivo local → mejora con IA (Demucs) → audio 3D binaural/Ambisonics → tu biblioteca*
 
