@@ -15,6 +15,14 @@
     "db:studio": "docker compose exec backend prisma studio --schema app/db/schema.prisma",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build",
-    "frontend:typecheck": "npm --prefix frontend run typecheck"
+    "frontend:typecheck": "npm --prefix frontend run typecheck",
+    "lint": "npm --prefix frontend run lint",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "build": "npm --prefix frontend run build",
+    "test:backend": "node testing/backend/harness.mjs unit",
+    "test:frontend": "node testing/frontend/harness.mjs smoke",
+    "test:harness": "node testing/run-all.mjs",
+    "perf:frontend": "node testing/frontend/harness.mjs perf",
+    "perf:pipeline": "node testing/backend/harness.mjs pipeline"
   }
 }

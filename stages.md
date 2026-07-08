@@ -16,6 +16,11 @@
 | 5 | PWA y experiencia móvil | 🟡 |
 | 6 | Calidad: testing y CI/CD | 🟡 |
 | 7 | Producción (Easypanel) | ⚪ |
+| 8 | Biblioteca avanzada y colaboración | ⚪ |
+| 9 | Reproductor 3D interactivo | ⚪ |
+| 10 | DJ mode y recomendaciones IA | ⚪ |
+| 11 | API pública y exports profesionales | ⚪ |
+| 12 | Comunidad y social features | ⚪ |
 
 ---
 
@@ -156,6 +161,13 @@
 - [x] Descarga del resultado (binaural / Ambisonics / stems individuales)
 - [x] Cambiar visibilidad y eliminar audios propios
 
+### Sprint 3.4 — Landing pública premium
+
+- [x] Rediseño de landing con hero full-bleed, mockup de producto, métricas, pipeline visual y CTA final
+- [x] Reemplazo de emojis por iconos profesionales en landing/nav
+- [x] Referencia visual tipo KIN adaptada a audio/IA sin copiar contenido
+- [x] Integrar logo de raíz en landing/nav y favicon (`LOGO-BIG.svg` + `LOGO-BIG.ico`)
+
 **Criterios de salida Stage 3:**
 - [ ] Flujo E2E completo sin tocar la API a mano
 - [ ] Sin errores en consola del navegador en el flujo feliz
@@ -228,6 +240,14 @@
 - [x] Badge de CI en README
 - [ ] (Opcional) push de imágenes a GHCR con tag por commit
 
+### Sprint 6.4 — Harness engineering
+
+- [x] Harness backend dividido por modo: unit, smoke, load, pipeline
+- [x] Harness frontend dividido por modo: smoke y perf/Lighthouse
+- [x] Reportes JSON/Markdown en `testing/reports`
+- [x] Scripts raíz: `test:backend`, `test:frontend`, `test:harness`, `perf:frontend`, `perf:pipeline`
+- [x] Documentación Mermaid de arquitectura, UX, UI, roadmap y harness en `docs/`
+
 **Criterios de salida Stage 6:**
 - [ ] `main` protegida: no se mergea con CI en rojo
 - [ ] Un PR de prueba con un bug intencional es detectado por CI
@@ -277,11 +297,171 @@
 
 ---
 
+## Stage 8 — Biblioteca avanzada y colaboración ⚪
+
+**Objetivo:** convertir la biblioteca en un espacio de organización real: playlists,
+colecciones, colaboración y control fino de visibilidad.
+
+### Sprint 8.1 — Playlists personales
+
+- [ ] Modelos `Playlist` y `PlaylistItem` con orden estable y ownership claro
+- [ ] CRUD de playlists desde API y UI
+- [ ] Agregar/quitar audios propios y públicos aprobados
+- [ ] Harness backend: permisos owner/public/admin sobre playlists
+
+### Sprint 8.2 — Playlists colaborativas
+
+- [ ] Roles por playlist: owner, editor, viewer
+- [ ] Invitaciones por email o enlace privado revocable
+- [ ] Auditoría mínima de cambios de colaboración
+- [ ] Harness frontend: flujo crear playlist → invitar → editar → revocar
+
+### Sprint 8.3 — Colecciones públicas
+
+- [ ] Página pública de playlist aprobada
+- [ ] Moderación de playlists públicas
+- [ ] Metadatos SEO por colección
+- [ ] Lighthouse de páginas públicas ≥ 90 en accesibilidad y best practices
+
+**Criterios de salida Stage 8:**
+- [ ] Un usuario crea una playlist, comparte acceso y otro usuario colabora sin ver audios privados no autorizados
+- [ ] Playlists públicas pasan por moderación antes de aparecer en discovery
+
+---
+
+## Stage 9 — Reproductor 3D interactivo ⚪
+
+**Objetivo:** usar los stems persistidos para posicionamiento espacial en cliente,
+con visualización 3D y controles de mezcla.
+
+### Sprint 9.1 — Motor WebAudio por stems
+
+- [ ] Descargar stems prefirmados y cargarlos en buffers sincronizados
+- [ ] Controles por stem: volumen, mute, solo y posición
+- [ ] Fallback a render binaural si WebAudio no está disponible
+- [ ] Harness frontend: sincronía de stems y ausencia de errores de AudioContext
+
+### Sprint 9.2 — Escena Three.js
+
+- [ ] Escena full-bleed del campo sonoro, no dentro de card decorativa
+- [ ] Nodos visuales por stem con arrastre accesible
+- [ ] Persistencia de preset espacial por audio
+- [ ] Verificación Playwright: canvas no vacío desktop/mobile
+
+### Sprint 9.3 — Presets de mezcla
+
+- [ ] Presets: studio, live room, cinema, focus vocal
+- [ ] Comparación A/B contra render servidor
+- [ ] Exportar preset como metadata JSON
+- [ ] Pruebas unitarias de serialización y migración de preset
+
+**Criterios de salida Stage 9:**
+- [ ] Un audio con stems se reproduce en cliente con posicionamiento ajustable y sin drift audible
+- [ ] Mobile mantiene controles esenciales sin overflow a 375px
+
+---
+
+## Stage 10 — DJ mode y recomendaciones IA ⚪
+
+**Objetivo:** crear experiencias de escucha activas: beat-matching, cola inteligente
+y recomendaciones basadas en metadata de audio.
+
+### Sprint 10.1 — Análisis musical
+
+- [ ] Extracción de BPM, key aproximada, energía y loudness
+- [ ] Guardado de metadata analítica en DB
+- [ ] Reprocesamiento idempotente para audios existentes
+- [ ] Harness pipeline: fixtures WAV cortos con BPM esperado
+
+### Sprint 10.2 — DJ mode
+
+- [ ] Cola de mezcla con crossfade y beat alignment básico
+- [ ] Vista dedicada para preparar transición entre dos audios
+- [ ] Guardado de sesión DJ
+- [ ] Harness frontend: controles de mezcla y no clipping en preview
+
+### Sprint 10.3 — Recomendaciones IA
+
+- [ ] Recomendaciones por similitud de metadata y comportamiento local
+- [ ] Explicación corta del motivo de recomendación
+- [ ] Control para ocultar recomendaciones no deseadas
+- [ ] Evaluación offline con dataset semilla y métricas simples
+
+**Criterios de salida Stage 10:**
+- [ ] Dos pistas se mezclan con crossfade estable y BPM visible
+- [ ] Recomendaciones no exponen audios privados ni datos de otros usuarios
+
+---
+
+## Stage 11 — API pública y exports profesionales ⚪
+
+**Objetivo:** abrir integraciones seguras y formatos profesionales de salida sin
+debilitar el modelo de permisos.
+
+### Sprint 11.1 — API pública
+
+- [ ] API keys por usuario con scopes y rotación
+- [ ] Rate limiting específico para API keys
+- [ ] Documentación OpenAPI pública con ejemplos
+- [ ] Harness API: auth por key, scopes y límites
+
+### Sprint 11.2 — Webhooks
+
+- [ ] Eventos `audio.completed`, `audio.failed`, `moderation.decided`
+- [ ] Firma HMAC de payloads
+- [ ] Reintentos con backoff y dead-letter logging
+- [ ] Tests de firma, replay prevention y entrega fallida
+
+### Sprint 11.3 — Exports Dolby/DTS:X
+
+- [ ] Evaluación técnica de formatos/licencias Dolby Atmos y DTS:X
+- [ ] Export intermedio ADM/BWF o formato libre si aplica
+- [ ] UI de export profesional con límites claros
+- [ ] Benchmark de export sobre pista de 4 min
+
+**Criterios de salida Stage 11:**
+- [ ] Un cliente externo crea un audio por API key y recibe webhook firmado al completar
+- [ ] Export profesional queda documentado con límites técnicos/licencia
+
+---
+
+## Stage 12 — Comunidad y social features ⚪
+
+**Objetivo:** convertir la biblioteca pública en comunidad moderada con perfiles,
+descubrimiento y feedback.
+
+### Sprint 12.1 — Perfiles públicos
+
+- [ ] Perfil público opt-in con bio, avatar y audios aprobados
+- [ ] Ajustes de privacidad por usuario
+- [ ] Bloqueo de indexación para perfiles privados
+- [ ] Harness frontend: perfil público/privado y metadata SEO
+
+### Sprint 12.2 — Interacciones sociales
+
+- [ ] Likes, bookmarks y comentarios moderables
+- [ ] Reportes de abuso y cola de revisión
+- [ ] Notificaciones in-app mínimas
+- [ ] Tests de permisos y anti-spam básico
+
+### Sprint 12.3 — Discovery comunitario
+
+- [ ] Feed de audios públicos aprobados
+- [ ] Filtros por tags, duración, formato y popularidad
+- [ ] Ranking transparente sin exponer datos privados
+- [ ] Lighthouse y carga de feed con dataset grande
+
+**Criterios de salida Stage 12:**
+- [ ] Un usuario descubre, guarda y comenta un audio público aprobado
+- [ ] Moderación puede retirar contenido social sin borrar el audio del dueño
+
+---
+
 ## 📈 Métricas de progreso
 
 | Métrica | Valor actual | Objetivo |
 |---------|--------------|----------|
-| Stages completados | 1/8 | 8/8 |
+| Stages completados | 1/13 | 13/13 |
 | Flujo E2E funcional | No | Sí |
 | Cobertura de tests backend | 0% | ≥ 70% |
 | Lighthouse PWA | — | ≥ 90 |

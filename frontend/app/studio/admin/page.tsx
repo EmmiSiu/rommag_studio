@@ -7,6 +7,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { BarChart3, CheckCircle2, Play, Users, type LucideIcon } from "lucide-react";
 
 import { StatusBadge, formatDuration } from "@/components/audio-card";
 import {
@@ -25,6 +26,12 @@ import {
 import { useAuth } from "@/lib/auth-context";
 
 type Tab = "metrics" | "users" | "moderation";
+
+const ADMIN_TABS = [
+  { key: "metrics", label: "Métricas", icon: BarChart3 },
+  { key: "users", label: "Usuarios", icon: Users },
+  { key: "moderation", label: "Moderación", icon: CheckCircle2 },
+] satisfies Array<{ key: Tab; label: string; icon: LucideIcon }>;
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -70,21 +77,17 @@ export default function AdminPage() {
       <h1 className="text-2xl font-bold">Panel de administración</h1>
 
       <div className="mt-6 flex rounded-lg border border-slate-800 p-1 text-sm font-medium">
-        {(
-          [
-            ["metrics", "📊 Métricas"],
-            ["users", "👥 Usuarios"],
-            ["moderation", `✅ Moderación${queue.length ? ` (${queue.length})` : ""}`],
-          ] as const
-        ).map(([key, label]) => (
+        {ADMIN_TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex-1 rounded-md px-4 py-2 transition ${
+            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-4 py-2 transition ${
               tab === key ? "bg-violet-600 text-white" : "text-slate-400 hover:text-white"
             }`}
           >
+            <Icon className="h-4 w-4" aria-hidden />
             {label}
+            {key === "moderation" && queue.length > 0 ? ` (${queue.length})` : null}
           </button>
         ))}
       </div>
@@ -131,7 +134,7 @@ export default function AdminPage() {
               <div className="min-w-0">
                 <p className="truncate font-semibold">
                   {u.display_name}{" "}
-                  {u.role === "SUPERADMIN" && <span className="text-xs text-amber-400">★ ADMIN</span>}
+                  {u.role === "SUPERADMIN" && <span className="text-xs text-amber-400">ADMIN</span>}
                   {!u.is_active && <span className="text-xs text-red-400"> · desactivado</span>}
                 </p>
                 <p className="truncate text-sm text-slate-400">{u.email}</p>
@@ -175,7 +178,7 @@ export default function AdminPage() {
       {tab === "moderation" && (
         <div className="mt-6 flex flex-col gap-2">
           {queue.length === 0 ? (
-            <p className="py-8 text-center text-slate-400">No hay audios pendientes de moderación 🎉</p>
+            <p className="py-8 text-center text-slate-400">No hay audios pendientes de moderación.</p>
           ) : (
             queue.map((audio) => (
               <div
@@ -198,7 +201,10 @@ export default function AdminPage() {
                     }
                     className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-slate-300 hover:border-slate-500"
                   >
-                    ▶ Escuchar
+                    <span className="inline-flex items-center gap-1.5">
+                      <Play className="h-3.5 w-3.5" aria-hidden />
+                      Escuchar
+                    </span>
                   </button>
                   <button
                     onClick={() => void act(() => moderateAudio(audio.id, true))}

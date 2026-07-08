@@ -3,6 +3,7 @@
 /** Biblioteca privada: todos los audios del usuario, con paginación incremental. */
 
 import Link from "next/link";
+import { ArrowRight, Headphones, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { AudioCard } from "@/components/audio-card";
@@ -40,9 +41,10 @@ export default function MyLibraryPage() {
         <h1 className="text-2xl font-bold">Mi biblioteca</h1>
         <Link
           href="/studio/new"
-          className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500"
         >
-          + Nuevo audio
+          <Plus className="h-4 w-4" aria-hidden />
+          Nuevo audio
         </Link>
       </div>
 
@@ -54,12 +56,11 @@ export default function MyLibraryPage() {
 
       {!loading && !error && audios.length === 0 ? (
         <div className="mt-16 text-center text-slate-400">
-          <p className="text-4xl" aria-hidden>
-            🎧
-          </p>
+          <Headphones className="mx-auto h-10 w-10" aria-hidden />
           <p className="mt-4">Aún no tienes audios.</p>
-          <Link href="/studio/new" className="mt-2 inline-block text-violet-400 hover:underline">
-            Procesa tu primer audio →
+          <Link href="/studio/new" className="mt-2 inline-flex items-center gap-1.5 text-violet-400 hover:underline">
+            Procesa tu primer audio
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         </div>
       ) : (

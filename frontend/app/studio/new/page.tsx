@@ -6,12 +6,23 @@
  */
 
 import { useRouter } from "next/navigation";
+import { Clapperboard, FileAudio, Globe2, Lock, Music, type LucideIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { ApiError, createFromYouTube, uploadAudio } from "@/lib/api";
 
 type Tab = "youtube" | "upload";
 type Visibility = "PUBLIC" | "PRIVATE";
+
+const VISIBILITY_OPTIONS = [
+  { value: "PRIVATE", label: "Privado (solo tú)", icon: Lock },
+  { value: "PUBLIC", label: "Público (pasa por moderación)", icon: Globe2 },
+] satisfies Array<{ value: Visibility; label: string; icon: LucideIcon }>;
+
+const TABS = [
+  { key: "youtube", label: "URL de YouTube", icon: Clapperboard },
+  { key: "upload", label: "Subir archivo", icon: FileAudio },
+] satisfies Array<{ key: Tab; label: string; icon: LucideIcon }>;
 
 const inputClasses =
   "rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-violet-500";
@@ -26,12 +37,7 @@ function VisibilityPicker({
   return (
     <fieldset className="flex gap-4 text-sm">
       <legend className="mb-1">Visibilidad</legend>
-      {(
-        [
-          ["PRIVATE", "🔒 Privado (solo tú)"],
-          ["PUBLIC", "🌐 Público (pasa por moderación)"],
-        ] as const
-      ).map(([option, label]) => (
+      {VISIBILITY_OPTIONS.map(({ value: option, label, icon: Icon }) => (
         <label key={option} className="flex items-center gap-2">
           <input
             type="radio"
@@ -39,6 +45,7 @@ function VisibilityPicker({
             checked={value === option}
             onChange={() => onChange(option)}
           />
+          <Icon className="h-4 w-4 text-slate-400" aria-hidden />
           {label}
         </label>
       ))}
@@ -119,12 +126,7 @@ export default function NewAudioPage() {
 
       {/* Tabs */}
       <div className="mt-6 flex rounded-lg border border-slate-800 p-1 text-sm font-medium">
-        {(
-          [
-            ["youtube", "🎬 URL de YouTube"],
-            ["upload", "📁 Subir archivo"],
-          ] as const
-        ).map(([key, label]) => (
+        {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             type="button"
@@ -132,10 +134,11 @@ export default function NewAudioPage() {
               setTab(key);
               setError(null);
             }}
-            className={`flex-1 rounded-md px-4 py-2 transition ${
+            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-4 py-2 transition ${
               tab === key ? "bg-violet-600 text-white" : "text-slate-400 hover:text-white"
             }`}
           >
+            <Icon className="h-4 w-4" aria-hidden />
             {label}
           </button>
         ))}
@@ -197,9 +200,7 @@ export default function NewAudioPage() {
               dragging ? "border-violet-500 bg-violet-500/10" : "border-slate-700 hover:border-slate-500"
             }`}
           >
-            <span className="text-3xl" aria-hidden>
-              🎵
-            </span>
+            <Music className="h-9 w-9 text-violet-300" aria-hidden />
             {file ? (
               <p className="font-medium">{file.name}</p>
             ) : (

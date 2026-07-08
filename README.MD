@@ -31,6 +31,7 @@
 - [Stack Tecnológico](#️-stack-tecnológico)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
 - [Instalación y Despliegue](#-instalación-y-despliegue)
+- [Testing Harness](#-testing-harness)
 - [Roadmap](#-roadmap)
 - [Seguridad](#-seguridad)
 
@@ -329,6 +330,24 @@ npm run db:migrate
 2. Configurar el grupo de variables de entorno en el dashboard
 3. Mapear dominios y volúmenes persistentes
 4. Deploy automático con Git
+
+---
+
+## 🧪 Testing Harness
+
+Los harness reproducibles viven en [`testing/`](testing/) y generan reportes
+JSON/Markdown en `testing/reports/`.
+
+```bash
+npm run test:backend   # pytest + coverage si hay Python/dev deps
+npm run test:frontend  # lint + typecheck + build + smoke opcional
+npm run test:harness   # backend + frontend smoke
+npm run perf:frontend  # Lighthouse contra FRONTEND_URL
+npm run perf:pipeline  # checklist benchmark/caché del pipeline pesado
+```
+
+Para smoke con navegador define `FRONTEND_URL`. Para smoke de API define
+`BACKEND_URL` o `API_URL`.
 
 ---
 

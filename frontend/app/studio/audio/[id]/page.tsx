@@ -7,6 +7,7 @@
  */
 
 import { useParams, useRouter } from "next/navigation";
+import { Check, Clapperboard, Download, FileAudio, Globe2, Headphones, Lock, Play, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 import { StatusBadge, formatDuration } from "@/components/audio-card";
@@ -205,7 +206,7 @@ function PipelineProgress({ status }: { status: string }) {
                     : "bg-slate-800 text-slate-500"
               }`}
             >
-              {done ? "✓" : stepNumber}
+              {done ? <Check className="h-4 w-4" aria-hidden /> : stepNumber}
             </span>
             <span className={`text-xs ${done || active ? "text-slate-200" : "text-slate-500"}`}>
               {step.label}
@@ -258,7 +259,7 @@ export default function AudioDetailPage() {
           await refresh();
           setNotice(
             status.status === "COMPLETED"
-              ? "🎉 Tu audio 3D está listo"
+              ? "Tu audio 3D está listo"
               : null,
           );
         } else {
@@ -334,19 +335,31 @@ export default function AudioDetailPage() {
     return <p className="py-16 text-center text-slate-400">{error ?? "Cargando…"}</p>;
   }
 
+  const SourceIcon = audio.source_type === "YOUTUBE" ? Clapperboard : FileAudio;
+  const VisibilityIcon = audio.visibility === "PUBLIC" ? Globe2 : Lock;
+  const ToggleVisibilityIcon = audio.visibility === "PUBLIC" ? Lock : Globe2;
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">{audio.title}</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {audio.source_type === "YOUTUBE" ? "🎬 YouTube" : "📁 Archivo"} ·{" "}
-            {formatDuration(audio.duration_seconds)} ·{" "}
-            {audio.visibility === "PUBLIC"
-              ? audio.is_approved
-                ? "🌐 Pública"
-                : "🌐 En moderación"
-              : "🔒 Privado"}
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-slate-400">
+            <span className="inline-flex items-center gap-1">
+              <SourceIcon className="h-3.5 w-3.5" aria-hidden />
+              {audio.source_type === "YOUTUBE" ? "YouTube" : "Archivo"}
+            </span>
+            <span aria-hidden>·</span>
+            <span>{formatDuration(audio.duration_seconds)}</span>
+            <span aria-hidden>·</span>
+            <span className="inline-flex items-center gap-1">
+              <VisibilityIcon className="h-3.5 w-3.5" aria-hidden />
+              {audio.visibility === "PUBLIC"
+                ? audio.is_approved
+                  ? "Pública"
+                  : "En moderación"
+                : "Privado"}
+            </span>
           </p>
         </div>
         <StatusBadge status={audio.status} />
@@ -378,8 +391,9 @@ export default function AudioDetailPage() {
       {/* Reproductor */}
       <section className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-5">
         <h2 className="font-semibold">Escuchar</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          El render binaural está pensado para audífonos 🎧
+        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-slate-500">
+          <Headphones className="h-3.5 w-3.5" aria-hidden />
+          El render binaural está pensado para audífonos
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {STREAM_VARIANTS.map(({ key, label }) => (
@@ -392,7 +406,10 @@ export default function AudioDetailPage() {
                   : "border border-slate-700 text-slate-300 hover:border-slate-500"
               }`}
             >
-              ▶ {label}
+              <span className="inline-flex items-center gap-1.5">
+                <Play className="h-3.5 w-3.5" aria-hidden />
+                {label}
+              </span>
             </button>
           ))}
         </div>
@@ -412,14 +429,20 @@ export default function AudioDetailPage() {
               onClick={() => void download("binaural")}
               className="rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300 hover:border-slate-500"
             >
-              ⬇ Binaural (audífonos)
+              <span className="inline-flex items-center gap-1.5">
+                <Download className="h-3.5 w-3.5" aria-hidden />
+                Binaural (audífonos)
+              </span>
             </button>
             {audio.has_ambisonics && (
               <button
                 onClick={() => void download("ambisonics")}
                 className="rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300 hover:border-slate-500"
               >
-                ⬇ Ambisonics (altavoces)
+                <span className="inline-flex items-center gap-1.5">
+                  <Download className="h-3.5 w-3.5" aria-hidden />
+                  Ambisonics (altavoces)
+                </span>
               </button>
             )}
             {audio.has_stems && (
@@ -427,7 +450,10 @@ export default function AudioDetailPage() {
                 onClick={() => void download("stems")}
                 className="rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300 hover:border-slate-500"
               >
-                ⬇ Stems (voces, batería, bajo, otros)
+                <span className="inline-flex items-center gap-1.5">
+                  <Download className="h-3.5 w-3.5" aria-hidden />
+                  Stems (voces, batería, bajo, otros)
+                </span>
               </button>
             )}
           </div>
@@ -439,16 +465,18 @@ export default function AudioDetailPage() {
         <button
           onClick={() => void toggleVisibility()}
           disabled={working}
-          className="rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300 hover:border-slate-500 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300 hover:border-slate-500 disabled:opacity-50"
         >
-          {audio.visibility === "PUBLIC" ? "🔒 Hacer privado" : "🌐 Hacer público"}
+          <ToggleVisibilityIcon className="h-3.5 w-3.5" aria-hidden />
+          {audio.visibility === "PUBLIC" ? "Hacer privado" : "Hacer público"}
         </button>
         <button
           onClick={() => void removeAudio()}
           disabled={working}
-          className="rounded-lg border border-red-500/40 px-3 py-1.5 text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/40 px-3 py-1.5 text-red-300 hover:bg-red-500/10 disabled:opacity-50"
         >
-          🗑 Eliminar
+          <Trash2 className="h-3.5 w-3.5" aria-hidden />
+          Eliminar
         </button>
       </section>
     </div>

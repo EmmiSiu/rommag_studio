@@ -11,18 +11,21 @@
   },
   "dependencies": {
     "@serwist/next": "^9.5.11",
+    "lucide-react": "^1.23.0",
     "next": "^15.3.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "serwist": "^9.5.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.3.4",
+    "lighthouse": "^12.8.2",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.0"

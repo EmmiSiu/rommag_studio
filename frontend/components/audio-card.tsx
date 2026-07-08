@@ -3,6 +3,7 @@
 /** Tarjeta de audio para las bibliotecas (privada y pública). */
 
 import Link from "next/link";
+import { Clapperboard, FileAudio } from "lucide-react";
 
 import type { AudioPublic, AudioStatus } from "@/lib/api";
 
@@ -36,6 +37,7 @@ export function formatDuration(seconds: number | null): string {
 }
 
 export function AudioCard({ audio }: { audio: AudioPublic }) {
+  const SourceIcon = audio.source_type === "YOUTUBE" ? Clapperboard : FileAudio;
   return (
     <Link
       href={`/studio/audio/${audio.id}`}
@@ -43,9 +45,13 @@ export function AudioCard({ audio }: { audio: AudioPublic }) {
     >
       <div className="min-w-0">
         <h3 className="truncate font-semibold">{audio.title}</h3>
-        <p className="mt-1 text-sm text-slate-400">
-          {audio.source_type === "YOUTUBE" ? "🎬 YouTube" : "📁 Archivo"} ·{" "}
-          {formatDuration(audio.duration_seconds)}
+        <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-slate-400">
+          <span className="inline-flex items-center gap-1">
+            <SourceIcon className="h-3.5 w-3.5" aria-hidden />
+            {audio.source_type === "YOUTUBE" ? "YouTube" : "Archivo"}
+          </span>
+          <span aria-hidden>·</span>
+          <span>{formatDuration(audio.duration_seconds)}</span>
           {audio.visibility === "PUBLIC" && (
             <span className="ml-2 text-cyan-400">{audio.is_approved ? "Pública" : "En moderación"}</span>
           )}

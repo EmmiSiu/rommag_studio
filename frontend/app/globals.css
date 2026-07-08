@@ -3,3 +3,26 @@
 :root {
   color-scheme: dark;
 }
+
+html {
+  background: #070914;
+}
+
+body {
+  margin: 0;
+  overflow-x: clip;
+  background: #070914;
+}
+
+@keyframes ai-word-rail {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-33.333%);
+  }
+}
+
+.ai-word-rail-track {
+  animation: ai-word-rail 28s linear infinite;
+}

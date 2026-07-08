@@ -60,3 +60,8 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# Harness reports (generated locally)
+testing/reports/*
+!testing/reports/.gitkeep
+!testing/reports/README.md

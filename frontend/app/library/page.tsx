@@ -6,6 +6,7 @@
  */
 
 import Link from "next/link";
+import { Headphones, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { formatDuration } from "@/components/audio-card";
@@ -81,8 +82,11 @@ export default function PublicLibraryPage() {
               >
                 <div className="min-w-0">
                   <h2 className="truncate font-semibold">{audio.title}</h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    🎧 Audio 3D · {formatDuration(audio.duration_seconds)}
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-slate-400">
+                    <Headphones className="h-4 w-4" aria-hidden />
+                    <span>Audio 3D</span>
+                    <span aria-hidden>·</span>
+                    <span>{formatDuration(audio.duration_seconds)}</span>
                   </p>
                 </div>
                 {user ? (
@@ -94,7 +98,14 @@ export default function PublicLibraryPage() {
                         : "border border-slate-700 text-slate-300 hover:border-violet-500/60"
                     }`}
                   >
-                    {playing?.id === audio.id ? "Sonando" : "▶ Escuchar"}
+                    {playing?.id === audio.id ? (
+                      "Sonando"
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Play className="h-3.5 w-3.5" aria-hidden />
+                        Escuchar
+                      </span>
+                    )}
                   </button>
                 ) : (
                   <Link

@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   // iOS ignora el manifest para el icono de "Añadir a pantalla de inicio"
   icons: {
+    icon: "/favicon.ico",
     apple: "/icons/apple-touch-icon.png",
   },
   appleWebApp: {
