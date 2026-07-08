@@ -25,7 +25,7 @@ jobs:
       - name: Instalar dependencias
         run: |
           pip install -r requirements.txt
-          pip install pytest
+          pip install -r requirements-dev.txt
       - name: Compilar módulos (detecta errores de sintaxis/imports rotos)
         run: python -m compileall app ../audio_services -q
       - name: Tests unitarios

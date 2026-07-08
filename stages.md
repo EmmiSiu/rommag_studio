@@ -209,7 +209,7 @@
 
 ### Sprint 6.1 — Tests backend
 
-- [ ] pytest configurado con DB de test (fixtures)
+- [x] pytest configurado con DB de test (fixtures con `TEST_DATABASE_URL`; integración real pendiente)
 - [ ] Tests de auth (registro, login, token expirado, roles)
 - [ ] Tests de permisos de audios (dueño/público/privado/admin)
 - [x] Tests unitarios de validación de subidas (magic bytes, sanitización) — 19 tests en `backend/tests/`; ffmpeg probe pendiente

@@ -4,6 +4,8 @@ import pytest
 
 from app.services.upload_validation import sanitize_title, sniff_audio_format
 
+pytestmark = pytest.mark.unit
+
 
 class TestSniffAudioFormat:
     def test_wav(self):
