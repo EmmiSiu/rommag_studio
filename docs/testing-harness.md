@@ -47,15 +47,19 @@ flowchart LR
 flowchart LR
     lint["lint"]
     typecheck["typecheck"]
+    unit["unit\nVitest"]
     build["production build"]
     browser["browser smoke\nconsole, images, 375px"]
+    stage9["stage9\nmocked stems, WebAudio, Three.js"]
     lighthouse["Lighthouse\nPWA/performance"]
     collaboration["collaboration\ncreate, invite, edit, revoke"]
 
     lint --> report["frontend report"]
     typecheck --> report
+    unit --> report
     build --> report
     browser --> report
+    stage9 --> report
     lighthouse --> report
     collaboration --> report
 ```
@@ -63,6 +67,12 @@ flowchart LR
 `node testing/frontend/harness.mjs collaboration` runs only with a live frontend
 and API. Without `FRONTEND_URL` plus `BACKEND_URL`/`API_URL`, it records a
 controlled skip instead of pretending Stage 8 was verified.
+
+`node testing/frontend/harness.mjs stage9` runs only with `FRONTEND_URL`. It
+mocks auth, audio metadata, `/stems` and short WAV files from Playwright, then
+loads the private audio detail page, decodes stems through WebAudio, checks
+play/pause, verifies a nonblank Three.js canvas and repeats the layout check at
+375px.
 
 ## Production Readiness Harness
 

@@ -21,6 +21,7 @@ async function runSmoke() {
   const steps = [
     await runCommand({ name: "frontend lint", command: npm, args: ["run", "lint"], cwd: frontendRoot }),
     await runCommand({ name: "frontend typecheck", command: npm, args: ["run", "typecheck"], cwd: frontendRoot }),
+    await runCommand({ name: "frontend unit tests", command: npm, args: ["run", "test:unit"], cwd: frontendRoot }),
   ];
   if (process.env.FRONTEND_URL) {
     steps.push(await runBrowserSmoke(process.env.FRONTEND_URL));
@@ -229,10 +230,259 @@ async function runCollaboration() {
   }
 }
 
+function wavBuffer({ frequency = 440, seconds = 0.75, sampleRate = 44100 } = {}) {
+  const samples = Math.floor(seconds * sampleRate);
+  const buffer = Buffer.alloc(44 + samples * 2);
+  buffer.write("RIFF", 0);
+  buffer.writeUInt32LE(36 + samples * 2, 4);
+  buffer.write("WAVE", 8);
+  buffer.write("fmt ", 12);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(sampleRate * 2, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write("data", 36);
+  buffer.writeUInt32LE(samples * 2, 40);
+
+  for (let index = 0; index < samples; index += 1) {
+    const sample = Math.sin((index / sampleRate) * frequency * Math.PI * 2) * 0.18;
+    buffer.writeInt16LE(Math.round(sample * 32767), 44 + index * 2);
+  }
+  return buffer;
+}
+
+async function runStage9() {
+  const frontendUrl = process.env.FRONTEND_URL;
+  if (!frontendUrl) {
+    return [
+      skippedStep(
+        "Stage 9 interactive player",
+        "Set FRONTEND_URL to verify mocked stems, WebAudio, nonblank Three.js canvas and 375px layout.",
+      ),
+    ];
+  }
+
+  const startedAt = Date.now();
+  let browser;
+  let page;
+  const requestFailures = [];
+  try {
+    const { chromium } = frontendRequire("playwright");
+    browser = await chromium.launch();
+    const appUrl = new URL(frontendUrl);
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await context.addCookies([
+      {
+        name: "ai_session",
+        value: "1",
+        domain: appUrl.hostname,
+        path: "/",
+        sameSite: "Lax",
+      },
+    ]);
+    await context.addInitScript(() => {
+      localStorage.setItem("ai_refresh_token", "stage9-refresh");
+    });
+
+    page = await context.newPage();
+    const consoleErrors = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("requestfailed", (request) => {
+      requestFailures.push(`${request.method()} ${request.url()} ${request.failure()?.errorText ?? ""}`.trim());
+    });
+
+    const corsHeaders = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+      "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    };
+    const stemDataUrl = (frequency) => `data:audio/wav;base64,${wavBuffer({ frequency }).toString("base64")}`;
+    const stems = {
+      vocals: stemDataUrl(440),
+      drums: stemDataUrl(220),
+      bass: stemDataUrl(110),
+      other: stemDataUrl(330),
+    };
+
+    await context.route("**/api/v1/**", async (route) => {
+      const request = route.request();
+      if (request.method() === "OPTIONS") {
+        await route.fulfill({ status: 204, headers: corsHeaders });
+        return;
+      }
+
+      const url = new URL(request.url());
+      const path = url.pathname;
+      const jsonHeaders = { ...corsHeaders, "content-type": "application/json" };
+
+      if (path.endsWith("/auth/refresh")) {
+        await route.fulfill({
+          status: 200,
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            access_token: "stage9-access",
+            refresh_token: "stage9-refresh-next",
+            token_type: "bearer",
+          }),
+        });
+        return;
+      }
+
+      if (path.endsWith("/auth/me")) {
+        await route.fulfill({
+          status: 200,
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            id: "stage9-user",
+            email: "stage9@example.test",
+            display_name: "Stage 9",
+            role: "USER",
+            is_active: true,
+            created_at: "2026-07-09T00:00:00Z",
+          }),
+        });
+        return;
+      }
+
+      if (path.endsWith("/audios/stage9-audio/stems")) {
+        await route.fulfill({
+          status: 200,
+          headers: jsonHeaders,
+          body: JSON.stringify({ stems, expires_in_seconds: 3600 }),
+        });
+        return;
+      }
+
+      if (path.endsWith("/audios/stage9-audio")) {
+        await route.fulfill({
+          status: 200,
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            id: "stage9-audio",
+            title: "Stage 9 mock audio",
+            owner_id: "stage9-user",
+            source_type: "UPLOAD",
+            status: "COMPLETED",
+            visibility: "PRIVATE",
+            is_approved: false,
+            duration_seconds: 1,
+            format: "wav",
+            error_message: null,
+            has_stems: true,
+            has_ambisonics: true,
+            created_at: "2026-07-09T00:00:00Z",
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({ status: 404, headers: jsonHeaders, body: JSON.stringify({ detail: "mock not found" }) });
+    });
+
+    await context.route("**/*.wav", async (route) => {
+      const url = new URL(route.request().url());
+      const frequency = url.pathname.includes("bass")
+        ? 110
+        : url.pathname.includes("drums")
+          ? 220
+          : url.pathname.includes("other")
+            ? 330
+            : 440;
+      await route.fulfill({
+        status: 200,
+        headers: { ...corsHeaders, "content-type": "audio/wav" },
+        body: wavBuffer({ frequency }),
+      });
+    });
+
+    await page.goto(new URL("/studio/audio/stage9-audio", frontendUrl).toString(), { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /cargar stems 3d/i }).click();
+    await page.locator('[data-stage9-player][data-stage9-ready="true"]').waitFor({ timeout: 15000 });
+    await page.getByRole("button", { name: /^Reproducir$/i }).click();
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: /^Pausar$/i }).click();
+
+    const canvasOk = await page.locator("[data-stage9-canvas] canvas").evaluate((canvas) => {
+      try {
+        return (canvas instanceof HTMLCanvasElement && canvas.toDataURL("image/png").length > 2000);
+      } catch {
+        return false;
+      }
+    });
+    const desktopOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.waitForTimeout(250);
+    const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    const mobileCanvasFits = await page.locator("[data-stage9-canvas]").evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.width <= window.innerWidth && rect.height >= 240;
+    });
+
+    await browser.close();
+    browser = null;
+
+    const failures = [
+      ...consoleErrors,
+      ...requestFailures,
+      canvasOk ? "" : "Three.js canvas was blank or unreadable.",
+      desktopOverflow ? "Horizontal overflow on desktop Stage 9 page." : "",
+      mobileOverflow ? "Horizontal overflow at 375px Stage 9 page." : "",
+      mobileCanvasFits ? "" : "Stage 9 canvas does not fit the 375px viewport.",
+    ].filter(Boolean);
+
+    return [
+      {
+        name: "Stage 9 interactive player",
+        status: failures.length === 0 ? "pass" : "fail",
+        durationMs: Date.now() - startedAt,
+        stdout: failures.length === 0 ? "Mocked stems decoded, WebAudio played, canvas rendered and mobile layout fit." : "",
+        stderr: failures.join("\n"),
+      },
+    ];
+  } catch (error) {
+    const diagnostics = [];
+    if (page) {
+      try {
+        const alerts = await page.locator('[role="alert"]').allTextContents();
+        if (alerts.length > 0) diagnostics.push(`Alerts: ${alerts.join(" | ")}`);
+      } catch {}
+      try {
+        const ready = await page.locator("[data-stage9-player]").getAttribute("data-stage9-ready");
+        diagnostics.push(`data-stage9-ready=${ready ?? "missing"}`);
+      } catch {}
+      try {
+        diagnostics.push(`URL: ${page.url()}`);
+      } catch {}
+    }
+    if (requestFailures.length > 0) diagnostics.push(`Request failures: ${requestFailures.join(" | ")}`);
+    return [
+      {
+        name: "Stage 9 interactive player",
+        status: "fail",
+        durationMs: Date.now() - startedAt,
+        stdout: "",
+        stderr:
+          error instanceof Error
+            ? `${error.message}${diagnostics.length ? `\n${diagnostics.join("\n")}` : ""}\nRequires FRONTEND_URL and Playwright Chromium.`
+            : String(error),
+      },
+    ];
+  } finally {
+    await browser?.close().catch(() => undefined);
+  }
+}
+
 const modeHandlers = {
   smoke: runSmoke,
   perf: runPerf,
   collaboration: runCollaboration,
+  stage9: runStage9,
 };
 
 if (!modeHandlers[mode]) {

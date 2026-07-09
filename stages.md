@@ -17,7 +17,7 @@
 | 6 | Calidad: testing y CI/CD | 🟡 |
 | 7 | Producción (Easypanel) | 🟡 |
 | 8 | Biblioteca avanzada y colaboración | 🟡 |
-| 9 | Reproductor 3D interactivo | ⚪ |
+| 9 | Reproductor 3D interactivo | 🟡 |
 | 10 | DJ mode y recomendaciones IA | ⚪ |
 | 11 | API pública y exports profesionales | ⚪ |
 | 12 | Comunidad y social features | ⚪ |
@@ -352,24 +352,24 @@ con visualización 3D y controles de mezcla.
 
 ### Sprint 9.1 — Motor WebAudio por stems
 
-- [ ] Descargar stems prefirmados y cargarlos en buffers sincronizados
-- [ ] Controles por stem: volumen, mute, solo y posición
-- [ ] Fallback a render binaural si WebAudio no está disponible
-- [ ] Harness frontend: sincronía de stems y ausencia de errores de AudioContext
+- [x] Descargar stems prefirmados y cargarlos en buffers sincronizados (WebAudio, `AudioContext` compartido; 2026-07-09)
+- [x] Controles por stem: volumen, mute, solo y posición X/Z
+- [x] Fallback a render binaural si WebAudio, CORS o decodificación de stems falla
+- [x] Harness frontend: stems WAV mockeados, play/pause WebAudio y ausencia de errores de AudioContext (`npm.cmd run test:stage9`)
 
 ### Sprint 9.2 — Escena Three.js
 
-- [ ] Escena full-bleed del campo sonoro, no dentro de card decorativa
-- [ ] Nodos visuales por stem con arrastre accesible
-- [ ] Persistencia de preset espacial por audio
-- [ ] Verificación Playwright: canvas no vacío desktop/mobile
+- [x] Escena full-bleed del campo sonoro, no dentro de card decorativa
+- [x] Nodos visuales por stem con arrastre pointer y movimiento por teclado
+- [x] Persistencia de preset espacial por audio (`localStorage`, `ai_spatial_preset:{audioId}`)
+- [x] Verificación Playwright: canvas no vacío desktop/mobile (`FRONTEND_URL` + harness Stage 9)
 
 ### Sprint 9.3 — Presets de mezcla
 
-- [ ] Presets: studio, live room, cinema, focus vocal
+- [x] Presets: studio, live room, cinema, focus vocal
 - [ ] Comparación A/B contra render servidor
-- [ ] Exportar preset como metadata JSON
-- [ ] Pruebas unitarias de serialización y migración de preset
+- [x] Exportar preset como metadata JSON (`SpatialPresetV1`)
+- [x] Pruebas unitarias de serialización, migración de preset, ganancias mute/solo y presets built-in (Vitest)
 
 **Criterios de salida Stage 9:**
 - [ ] Un audio con stems se reproduce en cliente con posicionamiento ajustable y sin drift audible

@@ -21,6 +21,7 @@
     "build": "npm --prefix frontend run build",
     "test:backend": "node testing/backend/harness.mjs unit",
     "test:frontend": "node testing/frontend/harness.mjs smoke",
+    "test:stage9": "node testing/frontend/harness.mjs stage9",
     "test:playlists": "node testing/frontend/harness.mjs collaboration",
     "test:harness": "node testing/run-all.mjs",
     "perf:frontend": "node testing/frontend/harness.mjs perf",

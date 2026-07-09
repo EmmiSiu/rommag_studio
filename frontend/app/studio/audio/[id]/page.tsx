@@ -11,6 +11,7 @@ import { Check, Clapperboard, Download, FileAudio, Globe2, Headphones, Lock, Pla
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 import { StatusBadge, formatDuration } from "@/components/audio-card";
+import { StemSpatialPlayer } from "@/components/stem-spatial-player";
 import {
   ApiError,
   deleteAudio,
@@ -340,7 +341,7 @@ export default function AudioDetailPage() {
   const ToggleVisibilityIcon = audio.visibility === "PUBLIC" ? Lock : Globe2;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-5xl">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">{audio.title}</h1>
@@ -387,6 +388,12 @@ export default function AudioDetailPage() {
           {error}
         </p>
       )}
+
+      <StemSpatialPlayer
+        audioId={id}
+        audioTitle={audio.title}
+        enabled={audio.status === "COMPLETED" && audio.has_stems}
+      />
 
       {/* Reproductor */}
       <section className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-5">

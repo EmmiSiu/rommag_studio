@@ -82,6 +82,10 @@ flowchart LR
 - 🎧 **Conversión a 3D**:
   - Binaural (audífonos)
   - Ambisonics (altavoces)
+- 🎚️ **Reproductor 3D interactivo**:
+  - Mezcla de stems en el navegador con WebAudio
+  - Escena Three.js para posicionar voces, batería, bajo y otros
+  - Presets espaciales exportables en JSON
 - 📚 **Biblioteca dual**: espacio público moderado + espacio privado
 - 🎼 **Playlists colaborativas**: colecciones privadas o públicas con roles owner/editor/viewer
 - 📱 **PWA móvil**: instalable en iOS y Android
@@ -342,6 +346,7 @@ JSON/Markdown en `testing/reports/`.
 ```bash
 npm run test:backend   # pytest + coverage si hay Python/dev deps
 npm run test:frontend  # lint + typecheck + build + smoke opcional
+npm run test:stage9    # reproductor 3D con API/stems mockeados si hay FRONTEND_URL
 npm run test:playlists # flujo colaborativo live opcional
 npm run test:harness   # backend + frontend smoke
 npm run perf:frontend  # Lighthouse contra FRONTEND_URL
@@ -368,7 +373,7 @@ timeline
     Stage 7 : Producción 🚀 : Easypanel, HTTPS, backups
 ```
 
-**Features futuros:** mix automático con beat-matching · playlists colaborativas · DJ mode · recomendaciones IA · visualizaciones 3D (Three.js + WebAudio) · stems descargables · API pública · exportación Dolby Atmos / DTS:X · social features
+**Features futuros:** mix automático con beat-matching · DJ mode · recomendaciones IA · API pública · exportación Dolby Atmos / DTS:X · social features
 
 ---
 

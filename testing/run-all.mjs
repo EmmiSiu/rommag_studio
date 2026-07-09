@@ -19,6 +19,12 @@ const steps = [
     args: ["testing/frontend/harness.mjs", "smoke"],
     cwd: repoRoot,
   }),
+  await runCommand({
+    name: "frontend harness stage9",
+    command: process.execPath,
+    args: ["testing/frontend/harness.mjs", "stage9"],
+    cwd: repoRoot,
+  }),
 ];
 
 const report = writeReport("all", "harness", steps);

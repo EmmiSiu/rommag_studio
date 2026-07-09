@@ -43,5 +43,12 @@ mindmap
       Uploader
       Library
       Player
+      Interactive 3D mixer
       Admin
 ```
+
+## Reproductor 3D
+
+- La escena Three.js vive como superficie de trabajo, no dentro de una tarjeta decorativa.
+- Los controles de stems usan sliders, toggles y botones con iconos; cada nodo mantiene color consistente.
+- Mobile 375px debe conservar canvas visible, controles sin overflow y fallback al reproductor de render.

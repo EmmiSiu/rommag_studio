@@ -7,7 +7,7 @@ prueba de salida esperada.
 timeline
     title Roadmap de capacidades
     Stage 8 : Playlists implementadas : Colaboracion base : Moderacion publica
-    Stage 9 : Reproductor 3D : Stems interactivos : Three.js + WebAudio
+    Stage 9 : Reproductor 3D en progreso : Stems interactivos : Three.js + WebAudio
     Stage 10 : DJ mode : Beat matching : Recomendaciones IA
     Stage 11 : API publica : Webhooks : Dolby/DTS:X
     Stage 12 : Perfiles : Social graph : Comunidad
@@ -40,3 +40,10 @@ flowchart LR
 - API: CRUD de playlists, items, colaboradores y moderacion.
 - UI: `/studio/playlists`, `/studio/playlists/[id]` y playlist publica aprobada.
 - Harness: tests unitarios de politica owner/editor/viewer/admin.
+
+## Stage 9 En Progreso
+
+- UI: reproductor 3D en `/studio/audio/[id]` para audios completados con stems.
+- Motor: WebAudio con `PannerNode`, controles por stem y fallback al render binaural.
+- Escena: Three.js con canvas verificado por harness y controles mobile a 375px.
+- Presets: `SpatialPresetV1` local por audio, export JSON y tests Vitest.
