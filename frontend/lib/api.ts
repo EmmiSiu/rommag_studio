@@ -50,6 +50,11 @@ export type AudioPublic = {
   is_approved: boolean;
   duration_seconds: number | null;
   format: string | null;
+  bpm: number | null;
+  musical_key: string | null;
+  energy: number | null;
+  loudness_db: number | null;
+  analyzed_at: string | null;
   error_message: string | null;
   has_stems: boolean;
   has_ambisonics: boolean;

@@ -17,6 +17,8 @@ Prisma/PostgreSQL, Redis/Celery, MinIO y servicios de audio.
 - Stage 7 tiene readiness versionado: runbook Easypanel, env production, scripts backup/restore PostgreSQL/MinIO y harness `prod:readiness`; el cierre requiere VPS/dominio/HTTPS/restore real.
 - Stage 8 tiene base funcional: playlists, items, colaboradores owner/editor/viewer, moderacion publica, auditoria minima y UI de studio/admin.
 - Stage 9 inicio local: `/studio/audio/[id]` incluye reproductor 3D interactivo para audios completados con stems, WebAudio + `PannerNode`, escena Three.js, presets `SpatialPresetV1` en `localStorage` y harness `npm run test:stage9` con API/stems mockeados.
+- Stage 10 inicio local: Audio 8D agregado al reproductor por stems con movimiento orbital, controles de velocidad/radio/profundidad y harness `npm run test:stage10`.
+- Stage 10.1 implementa análisis musical ligero: BPM, key aproximada, energía y loudness se guardan en `Audio`; `python -m app.scripts.analyze_existing_audio` backfillea audios existentes de forma idempotente.
 
 ## Reglas de Trabajo
 
@@ -33,6 +35,7 @@ Prisma/PostgreSQL, Redis/Celery, MinIO y servicios de audio.
 npm run test:backend
 npm run test:frontend
 npm run test:stage9
+npm run test:stage10
 npm run test:playlists
 npm run test:harness
 npm run perf:frontend

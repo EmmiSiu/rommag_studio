@@ -42,6 +42,7 @@ npm.cmd run build
 npm.cmd run test:backend
 npm.cmd run test:frontend
 npm.cmd run test:stage9
+npm.cmd run test:stage10
 npm.cmd run test:playlists
 npm.cmd run test:harness
 npm.cmd run perf:pipeline
@@ -65,6 +66,9 @@ overflow horizontal.
 cuando `FRONTEND_URL` esta definido. Mockea auth, metadata, `/stems` y WAVs
 cortos; verifica decodificacion WebAudio, play/pausa, canvas Three.js no vacio
 y layout mobile de 375px.
+
+`npm.cmd run test:stage10` extiende el mismo flujo mockeado y activa Audio 8D;
+verifica movimiento orbital del canvas/panners sin errores de consola.
 
 `npm.cmd run test:playlists` ejecuta el harness colaborativo de Stage 8. Si
 `FRONTEND_URL` y `BACKEND_URL`/`API_URL` estan definidos, crea usuarios efimeros
@@ -113,8 +117,16 @@ node testing/backend/harness.mjs load
 ```
 
 `npm.cmd run perf:pipeline` valida readiness del pipeline y deja el benchmark
-pesado de Demucs como prueba manual documentada. Cuando se ejecute ese benchmark
-real, registra RAM, duracion y resultado en `stages.md`.
+pesado de Demucs como prueba manual documentada. Tambien ejecuta fixtures WAV
+cortos para el analisis musical de Stage 10.1 (BPM/key). Cuando se ejecute ese
+benchmark real, registra RAM, duracion y resultado en `stages.md`.
+
+Para backfill de analisis musical en audios existentes:
+
+```bash
+python -m app.scripts.analyze_existing_audio
+python -m app.scripts.analyze_existing_audio --force
+```
 
 ### Harness Completo
 
@@ -142,6 +154,7 @@ npm.cmd run typecheck
 npm.cmd run build
 npm.cmd run test:harness
 npm.cmd run test:stage9
+npm.cmd run test:stage10
 npm.cmd run test:playlists
 ```
 
@@ -267,6 +280,7 @@ volumenes persistentes, backups de PostgreSQL y respaldo periodico de MinIO.
 - `npm.cmd run test:harness` pasa o skips justificados.
 - `npm.cmd run test:playlists` pasa o skip live justificado si toca playlists.
 - `npm.cmd run test:stage9` pasa o skip justificado si toca reproductor 3D.
+- `npm.cmd run test:stage10` pasa o skip justificado si toca Audio 8D.
 - Smoke/perf frontend ejecutado si toca landing/UI/PWA.
 - Smoke/load backend ejecutado si toca API activa.
 

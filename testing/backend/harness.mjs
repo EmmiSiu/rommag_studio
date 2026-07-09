@@ -91,8 +91,21 @@ async function runLoad() {
 
 async function runPipeline() {
   const steps = [];
+  const python = await findCommand(pythonCandidates);
   const composePath = resolve(repoRoot, "docker-compose.yml");
   const composeText = existsSync(composePath) ? readFileSync(composePath, "utf8") : "";
+  if (python) {
+    steps.push(
+      await runCommand({
+        name: "musical analysis fixtures",
+        command: python.command,
+        args: [...(python.prefixArgs ?? []), "-m", "pytest", "tests/test_musical_analysis.py", "-v"],
+        cwd: backendRoot,
+      }),
+    );
+  } else {
+    steps.push(skippedStep("musical analysis fixtures", "Python was not found."));
+  }
   steps.push(
     skippedStep(
       "pipeline benchmark",

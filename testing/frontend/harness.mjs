@@ -230,7 +230,7 @@ async function runCollaboration() {
   }
 }
 
-function wavBuffer({ frequency = 440, seconds = 0.75, sampleRate = 44100 } = {}) {
+function wavBuffer({ frequency = 440, seconds = 2.5, sampleRate = 44100 } = {}) {
   const samples = Math.floor(seconds * sampleRate);
   const buffer = Buffer.alloc(44 + samples * 2);
   buffer.write("RIFF", 0);
@@ -254,13 +254,16 @@ function wavBuffer({ frequency = 440, seconds = 0.75, sampleRate = 44100 } = {})
   return buffer;
 }
 
-async function runStage9() {
+async function runStage9({ exerciseAudio8D = false } = {}) {
   const frontendUrl = process.env.FRONTEND_URL;
+  const stepName = exerciseAudio8D ? "Stage 10 Audio 8D player" : "Stage 9 interactive player";
   if (!frontendUrl) {
     return [
       skippedStep(
-        "Stage 9 interactive player",
-        "Set FRONTEND_URL to verify mocked stems, WebAudio, nonblank Three.js canvas and 375px layout.",
+        stepName,
+        exerciseAudio8D
+          ? "Set FRONTEND_URL to verify Audio 8D motion over mocked stems."
+          : "Set FRONTEND_URL to verify mocked stems, WebAudio, nonblank Three.js canvas and 375px layout.",
       ),
     ];
   }
@@ -372,6 +375,11 @@ async function runStage9() {
             is_approved: false,
             duration_seconds: 1,
             format: "wav",
+            bpm: 120,
+            musical_key: "C major",
+            energy: 0.18,
+            loudness_db: -14.2,
+            analyzed_at: "2026-07-09T00:00:00Z",
             error_message: null,
             has_stems: true,
             has_ambisonics: true,
@@ -401,10 +409,29 @@ async function runStage9() {
     });
 
     await page.goto(new URL("/studio/audio/stage9-audio", frontendUrl).toString(), { waitUntil: "networkidle" });
+    await page.getByText("120 BPM").waitFor({ timeout: 5000 });
+    await page.getByText("C major").waitFor({ timeout: 5000 });
     await page.getByRole("button", { name: /cargar stems 3d/i }).click();
     await page.locator('[data-stage9-player][data-stage9-ready="true"]').waitFor({ timeout: 15000 });
     await page.getByRole("button", { name: /^Reproducir$/i }).click();
     await page.waitForTimeout(400);
+    const canvasBefore8D = exerciseAudio8D
+      ? await page.locator("[data-stage9-canvas] canvas").evaluate((canvas) =>
+          canvas instanceof HTMLCanvasElement ? canvas.toDataURL("image/png") : "",
+        )
+      : "";
+    if (exerciseAudio8D) {
+      await page.getByRole("button", { name: /activar audio 8d/i }).click();
+      await page.locator('[data-audio8d-enabled="true"]').waitFor({ timeout: 5000 });
+      await page.locator('[aria-label="Velocidad Audio 8D"]').evaluate((input) => {
+        if (input instanceof HTMLInputElement) {
+          input.value = "0.75";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+      await page.waitForTimeout(650);
+    }
     await page.getByRole("button", { name: /^Pausar$/i }).click();
 
     const canvasOk = await page.locator("[data-stage9-canvas] canvas").evaluate((canvas) => {
@@ -414,6 +441,12 @@ async function runStage9() {
         return false;
       }
     });
+    const canvasMovedFor8D = exerciseAudio8D
+      ? await page.locator("[data-stage9-canvas] canvas").evaluate((canvas, before) => {
+          if (!(canvas instanceof HTMLCanvasElement) || typeof before !== "string") return false;
+          return canvas.toDataURL("image/png") !== before;
+        }, canvasBefore8D)
+      : true;
     const desktopOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
     await page.setViewportSize({ width: 375, height: 812 });
@@ -431,6 +464,7 @@ async function runStage9() {
       ...consoleErrors,
       ...requestFailures,
       canvasOk ? "" : "Three.js canvas was blank or unreadable.",
+      canvasMovedFor8D ? "" : "Audio 8D did not visibly animate the Three.js scene.",
       desktopOverflow ? "Horizontal overflow on desktop Stage 9 page." : "",
       mobileOverflow ? "Horizontal overflow at 375px Stage 9 page." : "",
       mobileCanvasFits ? "" : "Stage 9 canvas does not fit the 375px viewport.",
@@ -438,10 +472,14 @@ async function runStage9() {
 
     return [
       {
-        name: "Stage 9 interactive player",
+        name: stepName,
         status: failures.length === 0 ? "pass" : "fail",
         durationMs: Date.now() - startedAt,
-        stdout: failures.length === 0 ? "Mocked stems decoded, WebAudio played, canvas rendered and mobile layout fit." : "",
+        stdout: failures.length === 0
+          ? exerciseAudio8D
+            ? "Audio 8D motion animated panners/canvas over mocked stems without console errors."
+            : "Mocked stems decoded, WebAudio played, canvas rendered and mobile layout fit."
+          : "",
         stderr: failures.join("\n"),
       },
     ];
@@ -463,7 +501,7 @@ async function runStage9() {
     if (requestFailures.length > 0) diagnostics.push(`Request failures: ${requestFailures.join(" | ")}`);
     return [
       {
-        name: "Stage 9 interactive player",
+        name: stepName,
         status: "fail",
         durationMs: Date.now() - startedAt,
         stdout: "",
@@ -483,6 +521,7 @@ const modeHandlers = {
   perf: runPerf,
   collaboration: runCollaboration,
   stage9: runStage9,
+  stage10: () => runStage9({ exerciseAudio8D: true }),
 };
 
 if (!modeHandlers[mode]) {

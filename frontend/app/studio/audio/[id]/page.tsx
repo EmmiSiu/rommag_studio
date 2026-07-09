@@ -65,6 +65,11 @@ function clampPosition(value: number, duration: number): number {
   return Math.max(0, Math.min(value, duration));
 }
 
+function formatNumber(value: number | null, fractionDigits = 0): string | null {
+  if (value === null || !Number.isFinite(value)) return null;
+  return value.toFixed(fractionDigits);
+}
+
 function setMediaSessionAction(
   mediaSession: MediaSession,
   action: MediaSessionAction,
@@ -339,6 +344,8 @@ export default function AudioDetailPage() {
   const SourceIcon = audio.source_type === "YOUTUBE" ? Clapperboard : FileAudio;
   const VisibilityIcon = audio.visibility === "PUBLIC" ? Globe2 : Lock;
   const ToggleVisibilityIcon = audio.visibility === "PUBLIC" ? Lock : Globe2;
+  const bpmLabel = formatNumber(audio.bpm);
+  const loudnessLabel = formatNumber(audio.loudness_db, 1);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -362,6 +369,13 @@ export default function AudioDetailPage() {
                 : "Privado"}
             </span>
           </p>
+          {(bpmLabel || audio.musical_key || loudnessLabel) && (
+            <p className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
+              {bpmLabel && <span className="rounded-full bg-slate-900 px-2 py-1">{bpmLabel} BPM</span>}
+              {audio.musical_key && <span className="rounded-full bg-slate-900 px-2 py-1">{audio.musical_key}</span>}
+              {loudnessLabel && <span className="rounded-full bg-slate-900 px-2 py-1">{loudnessLabel} dBFS</span>}
+            </p>
+          )}
         </div>
         <StatusBadge status={audio.status} />
       </div>

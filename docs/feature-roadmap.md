@@ -8,7 +8,7 @@ timeline
     title Roadmap de capacidades
     Stage 8 : Playlists implementadas : Colaboracion base : Moderacion publica
     Stage 9 : Reproductor 3D en progreso : Stems interactivos : Three.js + WebAudio
-    Stage 10 : DJ mode : Beat matching : Recomendaciones IA
+    Stage 10 : Audio 8D iniciado : DJ mode : Recomendaciones IA
     Stage 11 : API publica : Webhooks : Dolby/DTS:X
     Stage 12 : Perfiles : Social graph : Comunidad
 ```
@@ -47,3 +47,11 @@ flowchart LR
 - Motor: WebAudio con `PannerNode`, controles por stem y fallback al render binaural.
 - Escena: Three.js con canvas verificado por harness y controles mobile a 375px.
 - Presets: `SpatialPresetV1` local por audio, export JSON y tests Vitest.
+
+## Stage 10 En Progreso
+
+- Audio 8D: preset y controles en el reproductor por stems.
+- Motor: movimiento orbital sobre `PannerNode` con velocidad, radio y profundidad.
+- Analisis musical: BPM, key aproximada, energia y loudness persistidos en DB.
+- Harness: `npm.cmd run test:stage10` verifica animación 8D con stems mockeados.
+- Harness pipeline: `npm.cmd run perf:pipeline` valida fixtures WAV de BPM/key.

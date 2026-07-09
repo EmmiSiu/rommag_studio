@@ -33,13 +33,16 @@ flowchart LR
     unit["unit\npytest + coverage"]
     smoke["smoke\n/api/v1/health"]
     load["load\n25 concurrent health checks"]
-    pipeline["pipeline\nDemucs benchmark checklist"]
+    pipeline["pipeline\nanalysis fixtures + Demucs checklist"]
 
     unit --> report["backend report"]
     smoke --> report
     load --> report
     pipeline --> report
 ```
+
+El modo `pipeline` valida fixtures WAV cortos para el analisis musical de Stage
+10.1 y mantiene el benchmark pesado de Demucs como prueba manual documentada.
 
 ## Frontend Harness
 
@@ -51,6 +54,7 @@ flowchart LR
     build["production build"]
     browser["browser smoke\nconsole, images, 375px"]
     stage9["stage9\nmocked stems, WebAudio, Three.js"]
+    stage10["stage10\nAudio 8D motion"]
     lighthouse["Lighthouse\nPWA/performance"]
     collaboration["collaboration\ncreate, invite, edit, revoke"]
 
@@ -60,6 +64,7 @@ flowchart LR
     build --> report
     browser --> report
     stage9 --> report
+    stage10 --> report
     lighthouse --> report
     collaboration --> report
 ```
@@ -73,6 +78,10 @@ mocks auth, audio metadata, `/stems` and short WAV files from Playwright, then
 loads the private audio detail page, decodes stems through WebAudio, checks
 play/pause, verifies a nonblank Three.js canvas and repeats the layout check at
 375px.
+
+`node testing/frontend/harness.mjs stage10` extends the same mocked player flow
+by enabling Audio 8D, checking that the Three.js canvas changes while the stems
+orbit, and preserving the same console/mobile overflow checks.
 
 ## Production Readiness Harness
 

@@ -104,6 +104,13 @@ model Audio {
   sampleRate      Int?    @map("sample_rate")
   format          String? // mp3, wav, flac...
 
+  // Metadata analítica (Stage 10): BPM, key aproximada, energía y loudness.
+  bpm        Float?
+  musicalKey String?   @map("musical_key")
+  energy     Float?
+  loudnessDb Float?    @map("loudness_db")
+  analyzedAt DateTime? @map("analyzed_at")
+
   // Biblioteca
   visibility Visibility @default(PRIVATE)
   isApproved Boolean    @default(false) @map("is_approved") // moderación de contenido público

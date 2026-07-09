@@ -11,12 +11,21 @@ export type SpatialStemSettings = {
   z: number;
 };
 
+export type Audio8DMotionSettings = {
+  enabled: boolean;
+  speed: number;
+  radius: number;
+  depth: number;
+  spread: number;
+};
+
 export type SpatialPresetV1 = {
   version: 1;
   stems: Record<string, SpatialStemSettings>;
+  audio8d?: Audio8DMotionSettings;
 };
 
-export type SpatialPresetName = "studio" | "live-room" | "cinema" | "focus-vocal";
+export type SpatialPresetName = "studio" | "live-room" | "cinema" | "focus-vocal" | "audio-8d";
 
 export type BuiltInSpatialPreset = {
   name: SpatialPresetName;
@@ -30,6 +39,14 @@ const DEFAULT_SETTINGS: SpatialStemSettings = {
   solo: false,
   x: 0,
   z: 0,
+};
+
+export const DEFAULT_AUDIO_8D: Audio8DMotionSettings = {
+  enabled: false,
+  speed: 0.18,
+  radius: 1.45,
+  depth: 1.05,
+  spread: 1,
 };
 
 const POSITION_LIMIT = 2;
@@ -58,6 +75,17 @@ export function normalizeStemSettings(value: unknown): SpatialStemSettings {
   };
 }
 
+export function normalizeAudio8D(value: unknown): Audio8DMotionSettings {
+  const data = value && typeof value === "object" ? (value as Partial<Audio8DMotionSettings>) : {};
+  return {
+    enabled: boolOrDefault(data.enabled, DEFAULT_AUDIO_8D.enabled),
+    speed: clamp(numberOrDefault(data.speed, DEFAULT_AUDIO_8D.speed), 0.05, 1.2),
+    radius: clamp(numberOrDefault(data.radius, DEFAULT_AUDIO_8D.radius), 0.2, POSITION_LIMIT),
+    depth: clamp(numberOrDefault(data.depth, DEFAULT_AUDIO_8D.depth), 0.2, POSITION_LIMIT),
+    spread: clamp(numberOrDefault(data.spread, DEFAULT_AUDIO_8D.spread), 0, 2),
+  };
+}
+
 export function defaultStemSettings(stemName: string, index = 0, total: number = DEFAULT_STEM_ORDER.length): SpatialStemSettings {
   const byName: Record<string, Partial<SpatialStemSettings>> = {
     vocals: { volume: 0.88, x: 0, z: -1.35 },
@@ -82,6 +110,7 @@ export function createDefaultPreset(stemNames: string[] = [...DEFAULT_STEM_ORDER
     stems: Object.fromEntries(
       stemNames.map((stemName, index) => [stemName, defaultStemSettings(stemName, index, stemNames.length)]),
     ),
+    audio8d: { ...DEFAULT_AUDIO_8D },
   };
 }
 
@@ -103,6 +132,7 @@ export function mergePresetWithStems(
         }),
       ]),
     ),
+    audio8d: normalizeAudio8D(preset.audio8d),
   };
 }
 
@@ -119,7 +149,7 @@ export function migratePreset(raw: unknown, stemNames: string[] = [...DEFAULT_ST
   }
 
   if (!parsed || typeof parsed !== "object") return createDefaultPreset(stemNames);
-  const maybePreset = parsed as { version?: unknown; stems?: unknown };
+  const maybePreset = parsed as { version?: unknown; stems?: unknown; audio8d?: unknown };
 
   if (maybePreset.version === 1 && maybePreset.stems && typeof maybePreset.stems === "object") {
     return mergePresetWithStems(
@@ -131,6 +161,7 @@ export function migratePreset(raw: unknown, stemNames: string[] = [...DEFAULT_ST
             normalizeStemSettings(settings),
           ]),
         ),
+        audio8d: normalizeAudio8D(maybePreset.audio8d),
       },
       stemNames,
     );
@@ -146,6 +177,7 @@ export function migratePreset(raw: unknown, stemNames: string[] = [...DEFAULT_ST
             normalizeStemSettings(settings),
           ]),
         ),
+        audio8d: normalizeAudio8D(maybePreset.audio8d),
       },
       stemNames,
     );
@@ -157,6 +189,49 @@ export function migratePreset(raw: unknown, stemNames: string[] = [...DEFAULT_ST
 export function serializePreset(preset: SpatialPresetV1): string {
   const stemNames = Object.keys(preset.stems);
   return JSON.stringify(mergePresetWithStems(preset, stemNames), null, 2);
+}
+
+export function animateAudio8DStem(
+  settings: SpatialStemSettings,
+  stemName: string,
+  index: number,
+  total: number,
+  elapsedSeconds: number,
+  motion: Audio8DMotionSettings,
+): SpatialStemSettings {
+  if (!motion.enabled) return settings;
+
+  const namedPhase: Record<string, number> = {
+    vocals: 0,
+    bass: 0.25,
+    drums: 0.5,
+    other: 0.75,
+  };
+  const phase = namedPhase[stemName] ?? (total <= 1 ? 0 : index / total);
+  const angle = elapsedSeconds * motion.speed * Math.PI * 2 + phase * motion.spread * Math.PI * 2;
+
+  return {
+    ...settings,
+    x: clamp(Math.cos(angle) * motion.radius + settings.x * 0.12, -POSITION_LIMIT, POSITION_LIMIT),
+    z: clamp(Math.sin(angle) * motion.depth + settings.z * 0.18, -POSITION_LIMIT, POSITION_LIMIT),
+  };
+}
+
+export function animateAudio8DPreset(preset: SpatialPresetV1, elapsedSeconds: number): SpatialPresetV1 {
+  const motion = normalizeAudio8D(preset.audio8d);
+  if (!motion.enabled) return preset;
+
+  const entries = Object.entries(preset.stems);
+  return {
+    ...preset,
+    audio8d: motion,
+    stems: Object.fromEntries(
+      entries.map(([stemName, settings], index) => [
+        stemName,
+        animateAudio8DStem(settings, stemName, index, entries.length, elapsedSeconds, motion),
+      ]),
+    ),
+  };
 }
 
 export function effectiveStemGain(settings: SpatialStemSettings, hasAnySolo: boolean): number {
@@ -235,6 +310,19 @@ export const BUILT_IN_SPATIAL_PRESETS: BuiltInSpatialPreset[] = [
         drums: { x: -1.15, z: 1.15, volume: 0.48 },
         other: { x: 1.25, z: 0.75, volume: 0.52 },
       }),
+  },
+  {
+    name: "audio-8d",
+    label: "Audio 8D",
+    create: (stemNames) => ({
+      ...withPositions(stemNames, {
+        vocals: { x: 0, z: -1.6, volume: 0.9 },
+        bass: { x: -0.25, z: 0.1, volume: 0.82 },
+        drums: { x: 0.25, z: 1.25, volume: 0.74 },
+        other: { x: 1.15, z: 0.35, volume: 0.72 },
+      }),
+      audio8d: { ...DEFAULT_AUDIO_8D, enabled: true },
+    }),
   },
 ];
 

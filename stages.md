@@ -18,7 +18,7 @@
 | 7 | Producción (Easypanel) | 🟡 |
 | 8 | Biblioteca avanzada y colaboración | 🟡 |
 | 9 | Reproductor 3D interactivo | 🟡 |
-| 10 | DJ mode y recomendaciones IA | ⚪ |
+| 10 | Audio 8D, DJ mode y recomendaciones IA | 🟡 |
 | 11 | API pública y exports profesionales | ⚪ |
 | 12 | Comunidad y social features | ⚪ |
 
@@ -377,17 +377,25 @@ con visualización 3D y controles de mezcla.
 
 ---
 
-## Stage 10 — DJ mode y recomendaciones IA ⚪
+## Stage 10 — Audio 8D, DJ mode y recomendaciones IA 🟡
 
-**Objetivo:** crear experiencias de escucha activas: beat-matching, cola inteligente
-y recomendaciones basadas en metadata de audio.
+**Objetivo:** crear experiencias de escucha activas: audio 8D con movimiento
+orbital, beat-matching, cola inteligente y recomendaciones basadas en metadata
+de audio.
+
+### Sprint 10.0 — Audio 8D
+
+- [x] Preset Audio 8D para el reproductor por stems (movimiento orbital sobre `PannerNode`; 2026-07-09)
+- [x] Controles de velocidad, radio y profundidad 8D en UI
+- [x] Animación visual Three.js sincronizada con el movimiento 8D
+- [x] Harness frontend: Audio 8D activa movimiento de canvas sin errores (`npm.cmd run test:stage10`)
 
 ### Sprint 10.1 — Análisis musical
 
-- [ ] Extracción de BPM, key aproximada, energía y loudness
-- [ ] Guardado de metadata analítica en DB
-- [ ] Reprocesamiento idempotente para audios existentes
-- [ ] Harness pipeline: fixtures WAV cortos con BPM esperado
+- [x] Extracción de BPM, key aproximada, energía y loudness (`audio_services.analysis.musical`; 2026-07-09)
+- [x] Guardado de metadata analítica en DB (`bpm`, `musicalKey`, `energy`, `loudnessDb`, `analyzedAt`)
+- [x] Reprocesamiento idempotente para audios existentes (`python -m app.scripts.analyze_existing_audio`)
+- [x] Harness pipeline: fixtures WAV cortos con BPM esperado y key aproximada (`npm.cmd run perf:pipeline`)
 
 ### Sprint 10.2 — DJ mode
 
@@ -404,6 +412,7 @@ y recomendaciones basadas en metadata de audio.
 - [ ] Evaluación offline con dataset semilla y métricas simples
 
 **Criterios de salida Stage 10:**
+- [x] Un audio con stems puede activar Audio 8D con movimiento espacial ajustable
 - [ ] Dos pistas se mezclan con crossfade estable y BPM visible
 - [ ] Recomendaciones no exponen audios privados ni datos de otros usuarios
 

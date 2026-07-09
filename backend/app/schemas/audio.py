@@ -74,6 +74,11 @@ class AudioPublic(BaseModel):
     is_approved: bool
     duration_seconds: float | None
     format: str | None
+    bpm: float | None
+    musical_key: str | None
+    energy: float | None
+    loudness_db: float | None
+    analyzed_at: datetime | None
     error_message: str | None
     has_stems: bool
     has_ambisonics: bool
@@ -91,6 +96,11 @@ class AudioPublic(BaseModel):
             is_approved=audio.isApproved,
             duration_seconds=audio.durationSeconds,
             format=audio.format,
+            bpm=getattr(audio, "bpm", None),
+            musical_key=getattr(audio, "musicalKey", None),
+            energy=getattr(audio, "energy", None),
+            loudness_db=getattr(audio, "loudnessDb", None),
+            analyzed_at=getattr(audio, "analyzedAt", None),
             error_message=audio.errorMessage,
             has_stems=bool(audio.stemsKeys),
             has_ambisonics=audio.ambisonicsKey is not None,

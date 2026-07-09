@@ -7,11 +7,14 @@ import { SpatialScene } from "@/components/spatial-scene";
 import { ApiError, getStems } from "@/lib/api";
 import {
   BUILT_IN_SPATIAL_PRESETS,
+  DEFAULT_AUDIO_8D,
   DEFAULT_STEM_ORDER,
+  animateAudio8DPreset,
   createDefaultPreset,
   effectiveGains,
   mergePresetWithStems,
   migratePreset,
+  normalizeAudio8D,
   normalizeStemSettings,
   presetStorageKey,
   serializePreset,
@@ -109,6 +112,7 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
   const [buffers, setBuffers] = useState<Record<string, AudioBuffer> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
+  const [displayPreset, setDisplayPreset] = useState<SpatialPresetV1>(() => createDefaultPreset());
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const nodesRef = useRef<Record<string, StemAudioNode>>({});
@@ -119,6 +123,7 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
   const offsetRef = useRef(0);
   const endTimerRef = useRef<number | null>(null);
   const persistenceReadyRef = useRef(false);
+  const lastMotionRenderRef = useRef(0);
 
   const duration = useMemo(() => {
     if (!buffers) return 0;
@@ -148,8 +153,21 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
     masterRef.current = null;
   }, [clearEndTimer]);
 
+  const applyPresetToNodes = useCallback((nextPreset: SpatialPresetV1) => {
+    const context = audioContextRef.current;
+    const gains = effectiveGains(nextPreset);
+    Object.entries(nodesRef.current).forEach(([stemName, node]) => {
+      const settings = nextPreset.stems[stemName];
+      if (!settings) return;
+      const now = context?.currentTime ?? 0;
+      node.gain.gain.setTargetAtTime(gains[stemName] ?? 0, now, 0.015);
+      setPannerPosition(node.panner, settings.x, settings.z);
+    });
+  }, []);
+
   useEffect(() => {
     presetRef.current = preset;
+    setDisplayPreset(preset);
   }, [preset]);
 
   useEffect(() => {
@@ -162,16 +180,8 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
   }, [audioId, preset]);
 
   useEffect(() => {
-    const context = audioContextRef.current;
-    const gains = effectiveGains(preset);
-    Object.entries(nodesRef.current).forEach(([stemName, node]) => {
-      const settings = preset.stems[stemName];
-      if (!settings) return;
-      const now = context?.currentTime ?? 0;
-      node.gain.gain.setTargetAtTime(gains[stemName] ?? 0, now, 0.015);
-      setPannerPosition(node.panner, settings.x, settings.z);
-    });
-  }, [preset]);
+    applyPresetToNodes(preset);
+  }, [applyPresetToNodes, preset]);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -182,12 +192,30 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
         const current = clamp(context.currentTime - startedAtRef.current, 0, duration);
         offsetRef.current = current;
         setPosition(current);
+        const animatedPreset = animateAudio8DPreset(presetRef.current, current);
+        applyPresetToNodes(animatedPreset);
+        const now = performance.now();
+        if (animatedPreset !== presetRef.current && now - lastMotionRenderRef.current > 66) {
+          lastMotionRenderRef.current = now;
+          setDisplayPreset(animatedPreset);
+        }
       }
       raf = window.requestAnimationFrame(tick);
     };
     tick();
     return () => window.cancelAnimationFrame(raf);
-  }, [duration, isPlaying]);
+  }, [applyPresetToNodes, duration, isPlaying]);
+
+  useEffect(() => {
+    if (!buffers || isPlaying || !normalizeAudio8D(preset.audio8d).enabled) return;
+    let raf = 0;
+    const tick = () => {
+      setDisplayPreset(animateAudio8DPreset(presetRef.current, performance.now() / 1000));
+      raf = window.requestAnimationFrame(tick);
+    };
+    tick();
+    return () => window.cancelAnimationFrame(raf);
+  }, [buffers, isPlaying, preset.audio8d]);
 
   useEffect(() => {
     return () => {
@@ -238,6 +266,7 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
       setStemNames(names);
       setActiveStem((current) => (names.includes(current) ? current : names[0]));
       setPreset(nextPreset);
+      setDisplayPreset(nextPreset);
       setBuffers(nextBuffers);
       buffersRef.current = nextBuffers;
       persistenceReadyRef.current = true;
@@ -262,7 +291,8 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
       master.connect(context.destination);
       masterRef.current = master;
 
-      const gains = effectiveGains(presetRef.current);
+      const initialPreset = animateAudio8DPreset(presetRef.current, offset);
+      const gains = effectiveGains(initialPreset);
       const nextNodes: Record<string, StemAudioNode> = {};
 
       Object.entries(nextBuffers).forEach(([stemName, buffer]) => {
@@ -270,7 +300,7 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
         const source = context.createBufferSource();
         const gain = context.createGain();
         const panner = context.createPanner();
-        const settings = presetRef.current.stems[stemName];
+        const settings = initialPreset.stems[stemName];
 
         source.buffer = buffer;
         gain.gain.value = gains[stemName] ?? 0;
@@ -367,6 +397,22 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
     );
   };
 
+  const updateAudio8D = (partial: Partial<NonNullable<SpatialPresetV1["audio8d"]>>) => {
+    setPreset((current) =>
+      mergePresetWithStems(
+        {
+          ...current,
+          audio8d: normalizeAudio8D({
+            ...DEFAULT_AUDIO_8D,
+            ...current.audio8d,
+            ...partial,
+          }),
+        },
+        stemNames,
+      ),
+    );
+  };
+
   const applyBuiltInPreset = (presetName: string) => {
     const builtIn = BUILT_IN_SPATIAL_PRESETS.find((item) => item.name === presetName);
     if (!builtIn) return;
@@ -391,6 +437,7 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
 
   const ready = buffers !== null;
   const loading = status === "loading";
+  const audio8d = normalizeAudio8D(preset.audio8d);
 
   return (
     <section
@@ -453,10 +500,13 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
 
       <div className="mt-5">
         <SpatialScene
-          preset={preset}
+          preset={displayPreset}
           activeStem={activeStem}
           onActiveStemChange={setActiveStem}
-          onPositionChange={(stemName, positionChange) => updateStem(stemName, positionChange)}
+          onPositionChange={(stemName, positionChange) => {
+            updateAudio8D({ enabled: false });
+            updateStem(stemName, positionChange);
+          }}
         />
       </div>
 
@@ -488,7 +538,7 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
                 onClick={() => applyBuiltInPreset(item.name)}
                 className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300 hover:text-cyan-100"
               >
-                {item.label}
+              {item.label}
               </button>
             ))}
             <button
@@ -498,6 +548,69 @@ export function StemSpatialPlayer({ audioId, audioTitle, enabled }: StemSpatialP
               <RotateCcw className="h-4 w-4" aria-hidden />
               Reiniciar
             </button>
+          </div>
+
+          <div
+            data-audio8d-enabled={audio8d.enabled ? "true" : "false"}
+            className="rounded-lg border border-slate-800 bg-slate-900/40 p-3"
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-100">Audio 8D</h3>
+                <p className="text-xs text-slate-400">Movimiento orbital automático alrededor del oyente.</p>
+              </div>
+              <button
+                onClick={() => updateAudio8D({ enabled: !audio8d.enabled })}
+                className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                  audio8d.enabled
+                    ? "bg-amber-300 text-slate-950 hover:bg-amber-200"
+                    : "border border-slate-700 text-slate-300 hover:border-slate-500"
+                }`}
+              >
+                {audio8d.enabled ? "Desactivar 8D" : "Activar Audio 8D"}
+              </button>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <label className="block text-xs text-slate-400">
+                Velocidad
+                <input
+                  type="range"
+                  min={0.05}
+                  max={1.2}
+                  step={0.01}
+                  value={audio8d.speed}
+                  onChange={(event) => updateAudio8D({ speed: Number(event.target.value) })}
+                  className="mt-1 w-full accent-amber-300"
+                  aria-label="Velocidad Audio 8D"
+                />
+              </label>
+              <label className="block text-xs text-slate-400">
+                Radio
+                <input
+                  type="range"
+                  min={0.2}
+                  max={2}
+                  step={0.05}
+                  value={audio8d.radius}
+                  onChange={(event) => updateAudio8D({ radius: Number(event.target.value) })}
+                  className="mt-1 w-full accent-amber-300"
+                  aria-label="Radio Audio 8D"
+                />
+              </label>
+              <label className="block text-xs text-slate-400">
+                Profundidad
+                <input
+                  type="range"
+                  min={0.2}
+                  max={2}
+                  step={0.05}
+                  value={audio8d.depth}
+                  onChange={(event) => updateAudio8D({ depth: Number(event.target.value) })}
+                  className="mt-1 w-full accent-amber-300"
+                  aria-label="Profundidad Audio 8D"
+                />
+              </label>
+            </div>
           </div>
         </div>
 

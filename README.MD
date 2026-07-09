@@ -86,6 +86,10 @@ flowchart LR
   - Mezcla de stems en el navegador con WebAudio
   - Escena Three.js para posicionar voces, batería, bajo y otros
   - Presets espaciales exportables en JSON
+- 🌀 **Audio 8D**:
+  - Movimiento orbital automático sobre stems con velocidad, radio y profundidad ajustables
+- 📈 **Análisis musical**:
+  - BPM, key aproximada, energía y loudness guardados como metadata del audio
 - 📚 **Biblioteca dual**: espacio público moderado + espacio privado
 - 🎼 **Playlists colaborativas**: colecciones privadas o públicas con roles owner/editor/viewer
 - 📱 **PWA móvil**: instalable en iOS y Android
@@ -347,6 +351,7 @@ JSON/Markdown en `testing/reports/`.
 npm run test:backend   # pytest + coverage si hay Python/dev deps
 npm run test:frontend  # lint + typecheck + build + smoke opcional
 npm run test:stage9    # reproductor 3D con API/stems mockeados si hay FRONTEND_URL
+npm run test:stage10   # Audio 8D sobre stems mockeados si hay FRONTEND_URL
 npm run test:playlists # flujo colaborativo live opcional
 npm run test:harness   # backend + frontend smoke
 npm run perf:frontend  # Lighthouse contra FRONTEND_URL

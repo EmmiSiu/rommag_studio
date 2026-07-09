@@ -19,6 +19,7 @@ todo el pipeline corre dentro de un único `asyncio.run` por tarea.
 """
 
 import asyncio
+from datetime import UTC, datetime
 import logging
 import shutil
 import tempfile
@@ -35,6 +36,7 @@ from app.services.storage import get_storage
 from app.workers.celery_app import celery_app
 
 # Solo stdlib en el top-level de estos módulos: seguros de importar desde la API
+from audio_services.analysis import musical
 from audio_services.enhancement import separator
 from audio_services.spatial import binaural as spatial
 from audio_services.utils import ffmpeg as ffmpeg_utils
@@ -136,12 +138,18 @@ async def _execute_stages(audio, workdir: Path) -> None:
         )
 
     input_wav = ffmpeg_utils.convert_to_wav(raw_path, workdir / "input.wav")
+    analysis = musical.analyze_wav(input_wav)
     await prisma.audio.update(
         where={"id": audio.id},
         data={
             "durationSeconds": duration,
             "sampleRate": metadata["sample_rate"] or None,
             "format": audio.format or metadata["format"],
+            "bpm": analysis.bpm,
+            "musicalKey": analysis.musical_key,
+            "energy": analysis.energy,
+            "loudnessDb": analysis.loudness_db,
+            "analyzedAt": datetime.now(UTC),
         },
     )
 
