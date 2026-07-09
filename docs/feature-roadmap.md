@@ -6,7 +6,7 @@ prueba de salida esperada.
 ```mermaid
 timeline
     title Roadmap de capacidades
-    Stage 8 : Playlists : Biblioteca avanzada : Colaboracion
+    Stage 8 : Playlists implementadas : Colaboracion base : Moderacion publica
     Stage 9 : Reproductor 3D : Stems interactivos : Three.js + WebAudio
     Stage 10 : DJ mode : Beat matching : Recomendaciones IA
     Stage 11 : API publica : Webhooks : Dolby/DTS:X
@@ -33,3 +33,10 @@ flowchart LR
 - Harness o prueba de aceptacion definida antes de implementar.
 - Estados de error y permisos definidos.
 - Impacto en PWA/mobile revisado.
+
+## Stage 8 Implementado
+
+- Modelos Prisma: `Playlist`, `PlaylistItem`, `PlaylistCollaborator`.
+- API: CRUD de playlists, items, colaboradores y moderacion.
+- UI: `/studio/playlists`, `/studio/playlists/[id]` y playlist publica aprobada.
+- Harness: tests unitarios de politica owner/editor/viewer/admin.

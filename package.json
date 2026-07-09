@@ -23,6 +23,7 @@
     "test:frontend": "node testing/frontend/harness.mjs smoke",
     "test:harness": "node testing/run-all.mjs",
     "perf:frontend": "node testing/frontend/harness.mjs perf",
-    "perf:pipeline": "node testing/backend/harness.mjs pipeline"
+    "perf:pipeline": "node testing/backend/harness.mjs pipeline",
+    "prod:readiness": "node testing/production/harness.mjs"
   }
 }

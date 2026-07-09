@@ -43,6 +43,7 @@ npm.cmd run test:backend
 npm.cmd run test:frontend
 npm.cmd run test:harness
 npm.cmd run perf:pipeline
+npm.cmd run prod:readiness
 ```
 
 ### Frontend
@@ -142,6 +143,12 @@ Para cambios de audio/pipeline:
 
 ```bash
 npm.cmd run perf:pipeline
+```
+
+Para cambios de produccion, Easypanel, backups o seguridad operacional:
+
+```bash
+npm.cmd run prod:readiness
 ```
 
 Para cambios backend con servicio activo:

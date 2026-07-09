@@ -15,8 +15,8 @@
 | 4 | Admin y moderación | 🟡 |
 | 5 | PWA y experiencia móvil | 🟡 |
 | 6 | Calidad: testing y CI/CD | 🟡 |
-| 7 | Producción (Easypanel) | ⚪ |
-| 8 | Biblioteca avanzada y colaboración | ⚪ |
+| 7 | Producción (Easypanel) | 🟡 |
+| 8 | Biblioteca avanzada y colaboración | 🟡 |
 | 9 | Reproductor 3D interactivo | ⚪ |
 | 10 | DJ mode y recomendaciones IA | ⚪ |
 | 11 | API pública y exports profesionales | ⚪ |
@@ -248,15 +248,31 @@
 - [x] Scripts raíz: `test:backend`, `test:frontend`, `test:harness`, `perf:frontend`, `perf:pipeline`
 - [x] Documentación Mermaid de arquitectura, UX, UI, roadmap y harness en `docs/`
 
+### Sprint 6.5 — Auditoría de salida
+
+- [x] Auditoría local de criterios Stage 6 en `docs/stage6-exit-audit.md`
+- [x] CI versionado con jobs backend, frontend y Docker (`.github/workflows/ci.yml`)
+- [x] Harness local reproduce checks principales antes de commit
+- [ ] Branch protection de `main` verificada en GitHub
+- [ ] PR controlado con bug intencional registrado como fallo de CI
+
 **Criterios de salida Stage 6:**
 - [ ] `main` protegida: no se mergea con CI en rojo
 - [ ] Un PR de prueba con un bug intencional es detectado por CI
 
 ---
 
-## Stage 7 — Producción (Easypanel) ⚪
+## Stage 7 — Producción (Easypanel) 🟡
 
 > Guía operativa detallada en `pguide.md` (no versionado).
+
+### Sprint 7.0 — Readiness versionado
+
+- [x] Runbook Easypanel versionado en `infra/easypanel/README.md`
+- [x] Template de variables productivas en `infra/easypanel/env.production.example`
+- [x] Scripts base de backup/restore: PostgreSQL y MinIO (`infra/ops/`)
+- [x] Harness `npm.cmd run prod:readiness` con reporte JSON/Markdown
+- [x] Diagrama operativo en `docs/production-readiness.md`
 
 ### Sprint 7.1 — Despliegue inicial
 
@@ -297,29 +313,29 @@
 
 ---
 
-## Stage 8 — Biblioteca avanzada y colaboración ⚪
+## Stage 8 — Biblioteca avanzada y colaboración 🟡
 
 **Objetivo:** convertir la biblioteca en un espacio de organización real: playlists,
 colecciones, colaboración y control fino de visibilidad.
 
 ### Sprint 8.1 — Playlists personales
 
-- [ ] Modelos `Playlist` y `PlaylistItem` con orden estable y ownership claro
-- [ ] CRUD de playlists desde API y UI
-- [ ] Agregar/quitar audios propios y públicos aprobados
-- [ ] Harness backend: permisos owner/public/admin sobre playlists
+- [x] Modelos `Playlist` y `PlaylistItem` con orden estable y ownership claro
+- [x] CRUD de playlists desde API y UI
+- [x] Agregar/quitar audios propios y públicos aprobados
+- [x] Harness backend: permisos owner/public/admin sobre playlists
 
 ### Sprint 8.2 — Playlists colaborativas
 
-- [ ] Roles por playlist: owner, editor, viewer
-- [ ] Invitaciones por email o enlace privado revocable
+- [x] Roles por playlist: owner, editor, viewer
+- [x] Invitaciones por email de usuario existente, revocables desde UI
 - [ ] Auditoría mínima de cambios de colaboración
 - [ ] Harness frontend: flujo crear playlist → invitar → editar → revocar
 
 ### Sprint 8.3 — Colecciones públicas
 
-- [ ] Página pública de playlist aprobada
-- [ ] Moderación de playlists públicas
+- [x] Página pública de playlist aprobada
+- [x] Moderación de playlists públicas
 - [ ] Metadatos SEO por colección
 - [ ] Lighthouse de páginas públicas ≥ 90 en accesibilidad y best practices
 

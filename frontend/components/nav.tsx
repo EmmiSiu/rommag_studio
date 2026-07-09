@@ -5,7 +5,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LogOut, Plus } from "lucide-react";
+import { ListMusic, LogOut, Plus } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 
@@ -31,7 +31,7 @@ export function Nav() {
           />
           <span>Audio Inmersivo</span>
         </Link>
-        <div className="flex items-center gap-2 text-sm sm:gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 text-sm sm:gap-3">
           <Link href="/library" className="rounded px-2 py-1 text-slate-300 transition hover:text-white">
             Biblioteca pública
           </Link>
@@ -39,6 +39,10 @@ export function Nav() {
             <>
               <Link href="/studio/library" className="rounded px-2 py-1 text-slate-300 transition hover:text-white">
                 Mi biblioteca
+              </Link>
+              <Link href="/studio/playlists" className="inline-flex items-center gap-1 rounded px-2 py-1 text-slate-300 transition hover:text-white">
+                <ListMusic className="h-4 w-4" aria-hidden />
+                Playlists
               </Link>
               {user.role === "SUPERADMIN" && (
                 <Link href="/studio/admin" className="rounded px-2 py-1 text-amber-300 transition hover:text-amber-200">

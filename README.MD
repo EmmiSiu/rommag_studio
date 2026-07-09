@@ -83,6 +83,7 @@ flowchart LR
   - Binaural (audífonos)
   - Ambisonics (altavoces)
 - 📚 **Biblioteca dual**: espacio público moderado + espacio privado
+- 🎼 **Playlists colaborativas**: colecciones privadas o públicas con roles owner/editor/viewer
 - 📱 **PWA móvil**: instalable en iOS y Android
 
 ### Para Superadmin
@@ -344,6 +345,7 @@ npm run test:frontend  # lint + typecheck + build + smoke opcional
 npm run test:harness   # backend + frontend smoke
 npm run perf:frontend  # Lighthouse contra FRONTEND_URL
 npm run perf:pipeline  # checklist benchmark/caché del pipeline pesado
+npm run prod:readiness # checklist de producción/Easypanel/backups
 ```
 
 Para smoke con navegador define `FRONTEND_URL`. Para smoke de API define

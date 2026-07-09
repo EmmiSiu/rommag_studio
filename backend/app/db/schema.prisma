@@ -40,6 +40,11 @@ enum SourceType {
   UPLOAD
 }
 
+enum PlaylistRole {
+  EDITOR
+  VIEWER
+}
+
 // --- Modelos -------------------------------------------------------------------
 
 model User {
@@ -61,6 +66,10 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   audios Audio[]
+  playlists Playlist[] @relation("PlaylistOwner")
+  playlistItems PlaylistItem[] @relation("PlaylistItemAddedBy")
+  playlistCollaborations PlaylistCollaborator[] @relation("PlaylistCollaboratorUser")
+  invitedPlaylistCollaborations PlaylistCollaborator[] @relation("PlaylistCollaboratorInviter")
 
   @@map("users")
 }
@@ -102,8 +111,76 @@ model Audio {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  playlistItems PlaylistItem[]
+
   @@index([ownerId])
   @@index([visibility, isApproved])
   @@index([status])
   @@map("audios")
+}
+
+model Playlist {
+  id          String @id @default(uuid())
+  title       String
+  description String?
+
+  ownerId String @map("owner_id")
+  owner   User   @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  visibility Visibility @default(PRIVATE)
+  isApproved Boolean    @default(false) @map("is_approved")
+
+  items         PlaylistItem[]
+  collaborators PlaylistCollaborator[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@index([visibility, isApproved])
+  @@map("playlists")
+}
+
+model PlaylistItem {
+  id String @id @default(uuid())
+
+  playlistId String   @map("playlist_id")
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  audioId String @map("audio_id")
+  audio   Audio  @relation(fields: [audioId], references: [id], onDelete: Cascade)
+
+  addedById String @map("added_by_id")
+  addedBy   User   @relation("PlaylistItemAddedBy", fields: [addedById], references: [id], onDelete: Cascade)
+
+  position Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([playlistId, audioId])
+  @@unique([playlistId, position])
+  @@index([audioId])
+  @@map("playlist_items")
+}
+
+model PlaylistCollaborator {
+  id String @id @default(uuid())
+
+  playlistId String   @map("playlist_id")
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation("PlaylistCollaboratorUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  role PlaylistRole @default(VIEWER)
+
+  invitedById String? @map("invited_by_id")
+  invitedBy   User?   @relation("PlaylistCollaboratorInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([playlistId, userId])
+  @@index([userId])
+  @@map("playlist_collaborators")
 }

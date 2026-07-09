@@ -7,6 +7,7 @@ Automated verification is split by runtime:
 - `npm run test:harness`: backend and frontend smoke checks.
 - `npm run perf:frontend`: Lighthouse against `FRONTEND_URL`.
 - `npm run perf:pipeline`: pipeline readiness checks and benchmark instructions.
+- `npm run prod:readiness`: production/Easypanel readiness checks.
 
 Reports are written to `testing/reports/` as JSON and Markdown. Browser checks
 run only when `FRONTEND_URL` is set. API smoke checks run only when `BACKEND_URL`

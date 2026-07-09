@@ -8,16 +8,19 @@ flowchart TB
     root["npm scripts raiz"]
     backend["testing/backend/harness.mjs"]
     frontend["testing/frontend/harness.mjs"]
+    production["testing/production/harness.mjs"]
     all["testing/run-all.mjs"]
     reports[("testing/reports\nJSON + Markdown")]
 
     root --> backend
     root --> frontend
+    root --> production
     root --> all
     all --> backend
     all --> frontend
     backend --> reports
     frontend --> reports
+    production --> reports
 ```
 
 ## Backend Harness
@@ -50,4 +53,21 @@ flowchart LR
     build --> report
     browser --> report
     lighthouse --> report
+```
+
+## Production Readiness Harness
+
+```mermaid
+flowchart LR
+    runbook["Easypanel runbook"]
+    env["production env template"]
+    backups["backup/restore scripts"]
+    compose["compose exposure checks"]
+    ci["CI PR coverage"]
+
+    runbook --> report["production readiness report"]
+    env --> report
+    backups --> report
+    compose --> report
+    ci --> report
 ```

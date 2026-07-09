@@ -67,6 +67,41 @@ export type StreamVariant = "auto" | "binaural" | "ambisonics" | "enhanced" | "o
 export type StreamURL = { url: string; expires_in_seconds: number };
 export type StemsOut = { stems: Record<string, string>; expires_in_seconds: number };
 
+export type PlaylistRole = "OWNER" | "EDITOR" | "VIEWER" | "PUBLIC";
+
+export type PlaylistItem = {
+  id: string;
+  audio_id: string;
+  position: number;
+  added_by_id: string;
+  created_at: string;
+  audio: AudioPublic | null;
+};
+
+export type PlaylistCollaborator = {
+  id: string;
+  user_id: string;
+  email: string;
+  display_name: string;
+  role: "EDITOR" | "VIEWER";
+  created_at: string;
+};
+
+export type PlaylistPublic = {
+  id: string;
+  title: string;
+  description: string | null;
+  owner_id: string;
+  visibility: "PUBLIC" | "PRIVATE";
+  is_approved: boolean;
+  items_count: number;
+  role: PlaylistRole;
+  created_at: string;
+  updated_at: string;
+  items: PlaylistItem[];
+  collaborators: PlaylistCollaborator[];
+};
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -243,6 +278,73 @@ export function updateAudio(
 
 export function deleteAudio(id: string): Promise<void> {
   return api<void>(`/audios/${id}`, { method: "DELETE" });
+}
+
+// --- Playlists ------------------------------------------------------------------
+
+export function createPlaylist(data: {
+  title: string;
+  description?: string;
+  visibility: "PUBLIC" | "PRIVATE";
+}): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>("/playlists", { method: "POST", body: data });
+}
+
+export function listMyPlaylists(): Promise<PlaylistPublic[]> {
+  return api<PlaylistPublic[]>("/playlists/mine");
+}
+
+export function listPublicPlaylists(skip = 0, limit = 20): Promise<PlaylistPublic[]> {
+  return api<PlaylistPublic[]>(`/playlists/public?skip=${skip}&limit=${limit}`, { auth: false });
+}
+
+export function getPublicPlaylist(id: string): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/public/${id}`, { auth: false });
+}
+
+export function getPlaylist(id: string): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}`);
+}
+
+export function updatePlaylist(
+  id: string,
+  data: { title?: string; description?: string; visibility?: "PUBLIC" | "PRIVATE" },
+): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}`, { method: "PATCH", body: data });
+}
+
+export function deletePlaylist(id: string): Promise<void> {
+  return api<void>(`/playlists/${id}`, { method: "DELETE" });
+}
+
+export function addPlaylistItem(id: string, audioId: string): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}/items`, { method: "POST", body: { audio_id: audioId } });
+}
+
+export function removePlaylistItem(id: string, audioId: string): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}/items/${audioId}`, { method: "DELETE" });
+}
+
+export function upsertPlaylistCollaborator(
+  id: string,
+  data: { email: string; role: "EDITOR" | "VIEWER" },
+): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}/collaborators`, { method: "POST", body: data });
+}
+
+export function updatePlaylistCollaborator(
+  id: string,
+  userId: string,
+  role: "EDITOR" | "VIEWER",
+): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}/collaborators/${userId}`, {
+    method: "PATCH",
+    body: { role },
+  });
+}
+
+export function removePlaylistCollaborator(id: string, userId: string): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}/collaborators/${userId}`, { method: "DELETE" });
 }
 
 // --- Admin (solo SUPERADMIN; el backend rechaza cualquier otro rol) -------------

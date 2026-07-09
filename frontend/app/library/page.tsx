@@ -6,12 +6,19 @@
  */
 
 import Link from "next/link";
-import { Headphones, Play } from "lucide-react";
+import { Headphones, ListMusic, Play, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { formatDuration } from "@/components/audio-card";
 import { Nav } from "@/components/nav";
-import { ApiError, getStreamUrl, listPublicLibrary, type AudioPublic } from "@/lib/api";
+import {
+  ApiError,
+  getStreamUrl,
+  listPublicLibrary,
+  listPublicPlaylists,
+  type AudioPublic,
+  type PlaylistPublic,
+} from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const PAGE_SIZE = 20;
@@ -19,6 +26,7 @@ const PAGE_SIZE = 20;
 export default function PublicLibraryPage() {
   const { user } = useAuth();
   const [audios, setAudios] = useState<AudioPublic[]>([]);
+  const [playlists, setPlaylists] = useState<PlaylistPublic[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +51,12 @@ export default function PublicLibraryPage() {
     void loadPage(0);
   }, [loadPage]);
 
+  useEffect(() => {
+    void listPublicPlaylists(0, 6)
+      .then(setPlaylists)
+      .catch(() => undefined);
+  }, []);
+
   const play = async (audio: AudioPublic) => {
     setError(null);
     try {
@@ -62,6 +76,39 @@ export default function PublicLibraryPage() {
         <p className="mt-1 text-slate-400">
           Audios mejorados y espacializados por la comunidad.
         </p>
+
+        {playlists.length > 0 && (
+          <section className="mt-8">
+            <h2 className="flex items-center gap-2 font-semibold">
+              <ListMusic className="h-5 w-5 text-cyan-200" aria-hidden />
+              Colecciones públicas
+            </h2>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {playlists.map((playlist) => (
+                <Link
+                  key={playlist.id}
+                  href={`/playlists/${playlist.id}`}
+                  className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 transition hover:border-cyan-300/40"
+                >
+                  <h3 className="truncate font-semibold">{playlist.title}</h3>
+                  {playlist.description && (
+                    <p className="mt-1 truncate text-sm text-slate-400">{playlist.description}</p>
+                  )}
+                  <p className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Headphones className="h-4 w-4" aria-hidden />
+                      {playlist.items_count} audios
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="h-4 w-4" aria-hidden />
+                      {playlist.collaborators.length} colaboradores
+                    </span>
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {error && (
           <p role="alert" className="mt-6 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
