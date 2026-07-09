@@ -20,9 +20,14 @@ function text(path) {
 }
 
 const compose = text("docker-compose.yml");
-const config = text("backend/app/core/config.py");
+const main = text("backend/app/main.py");
 const ci = text(".github/workflows/ci.yml");
 const envExample = text("infra/easypanel/env.production.example");
+const productionDocs = text("docs/production-readiness.md");
+const easypanelRunbook = text("infra/easypanel/README.md");
+
+const docsDisabledOutsideDevelopment =
+  /docs_url\s*=\s*["']\/docs["']\s*if\s*settings\.APP_ENV\s*==\s*["']development["']\s*else\s*None/.test(main);
 
 const steps = [
   checkFile("infra/easypanel/README.md", "Easypanel runbook"),
@@ -30,6 +35,7 @@ const steps = [
   checkFile("infra/ops/backup-postgres.sh", "PostgreSQL backup script"),
   checkFile("infra/ops/restore-postgres.sh", "PostgreSQL restore script"),
   checkFile("infra/ops/backup-minio.sh", "MinIO backup script"),
+  checkFile("infra/ops/restore-minio.sh", "MinIO restore script"),
   compose.includes("model_cache:") && compose.includes("/home/appuser/.cache")
     ? pass("Demucs model cache volume declared")
     : fail("Demucs model cache volume declared", "worker must persist /home/appuser/.cache"),
@@ -39,7 +45,7 @@ const steps = [
   !/redis:[\s\S]*?ports:/m.test(compose.split("minio:")[0])
     ? pass("Redis has no public ports in compose")
     : fail("Redis has no public ports in compose", "Remove redis ports before production"),
-  config.includes('docs_url="/docs" if settings.APP_ENV == "development" else None')
+  docsDisabledOutsideDevelopment
     ? pass("OpenAPI docs disabled outside development")
     : fail("OpenAPI docs disabled outside development", "APP_ENV=production must disable /docs"),
   envExample.includes("APP_ENV=production") && envExample.includes("MINIO_USE_SSL=true")
@@ -48,6 +54,9 @@ const steps = [
   ci.includes("pull_request:") && ci.includes("pytest tests -v") && ci.includes("npm run build")
     ? pass("CI covers PR backend/frontend checks")
     : fail("CI covers PR backend/frontend checks", "CI must run on PR with backend tests and frontend build"),
+  productionDocs.includes("Restore Drill") && easypanelRunbook.includes("Restore Drill")
+    ? pass("restore/deploy checklist documented")
+    : fail("restore/deploy checklist documented", "Document restore drills in production readiness docs and Easypanel runbook"),
 ];
 
 const report = writeReport("production", "readiness", steps);

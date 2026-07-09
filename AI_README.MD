@@ -41,6 +41,7 @@ npm.cmd run typecheck
 npm.cmd run build
 npm.cmd run test:backend
 npm.cmd run test:frontend
+npm.cmd run test:playlists
 npm.cmd run test:harness
 npm.cmd run perf:pipeline
 npm.cmd run prod:readiness
@@ -58,6 +59,11 @@ npm.cmd --prefix frontend run start -- --hostname 127.0.0.1 --port 3000
 esta definido, tambien corre smoke de navegador con Playwright en viewport
 mobile de 375px, valida consola limpia, imagenes cargadas y ausencia de
 overflow horizontal.
+
+`npm.cmd run test:playlists` ejecuta el harness colaborativo de Stage 8. Si
+`FRONTEND_URL` y `BACKEND_URL`/`API_URL` estan definidos, crea usuarios efimeros
+en un stack de desarrollo y verifica crear playlist, invitar colaborador,
+cambiar rol y revocar acceso. Sin entorno live queda como skip documentado.
 
 ```powershell
 $env:FRONTEND_URL='http://127.0.0.1:3000'
@@ -129,6 +135,7 @@ npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd run build
 npm.cmd run test:harness
+npm.cmd run test:playlists
 ```
 
 Para cambios de landing, UI, imagenes, PWA o performance:
@@ -251,6 +258,7 @@ volumenes persistentes, backups de PostgreSQL y respaldo periodico de MinIO.
 - `npm.cmd run typecheck` pasa.
 - `npm.cmd run build` pasa.
 - `npm.cmd run test:harness` pasa o skips justificados.
+- `npm.cmd run test:playlists` pasa o skip live justificado si toca playlists.
 - Smoke/perf frontend ejecutado si toca landing/UI/PWA.
 - Smoke/load backend ejecutado si toca API activa.
 

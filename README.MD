@@ -342,6 +342,7 @@ JSON/Markdown en `testing/reports/`.
 ```bash
 npm run test:backend   # pytest + coverage si hay Python/dev deps
 npm run test:frontend  # lint + typecheck + build + smoke opcional
+npm run test:playlists # flujo colaborativo live opcional
 npm run test:harness   # backend + frontend smoke
 npm run perf:frontend  # Lighthouse contra FRONTEND_URL
 npm run perf:pipeline  # checklist benchmark/caché del pipeline pesado

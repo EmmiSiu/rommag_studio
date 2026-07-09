@@ -76,3 +76,27 @@ node testing/frontend/harness.mjs perf
 
 Use the scripts in `infra/ops/` as the baseline. Adapt paths/secrets in the
 server environment, not in git.
+
+## Restore Drill
+
+Run this drill after the first production backup and before considering Stage 7
+closed:
+
+1. Create a clean Easypanel project or temporary VPS with empty PostgreSQL and
+   MinIO volumes.
+2. Copy one PostgreSQL dump and one MinIO mirror into paths visible to the
+   relevant containers.
+3. Run `infra/ops/restore-postgres.sh /path/to/backup.sql.gz`.
+4. Run `infra/ops/restore-minio.sh /path/to/minio-backup-dir`.
+5. Deploy backend, worker and frontend from the same git commit.
+6. Verify `/api/v1/health`, login, private library, public library and one
+   restored playlist.
+
+## Deploy Checklist
+
+- CI green on the commit being deployed.
+- Production env group points `NEXT_PUBLIC_API_URL`, `CORS_ORIGINS` and
+  `MINIO_PUBLIC_ENDPOINT` to HTTPS domains.
+- PostgreSQL and Redis have no public ports.
+- MinIO Console is private or behind Easypanel auth.
+- `npm.cmd run prod:readiness` is green locally before deploy.

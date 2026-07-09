@@ -26,6 +26,7 @@ from prisma.models import User
 
 router = APIRouter()
 audit_logger = logging.getLogger("audit.admin")
+playlist_audit_logger = logging.getLogger("audit.playlists")
 
 PLAYLIST_INCLUDE = {
     "items": {"include": {"audio": True}},
@@ -266,6 +267,14 @@ async def upsert_playlist_collaborator(
     )
     if existing:
         await prisma.playlistcollaborator.update(where={"id": existing.id}, data={"role": payload.role})
+        playlist_audit_logger.info(
+            "USER %s changed collaborator %s to %s on playlist %s (%s)",
+            current_user.email,
+            target.email,
+            payload.role,
+            playlist.id,
+            playlist.title,
+        )
     else:
         await prisma.playlistcollaborator.create(
             data={
@@ -274,6 +283,14 @@ async def upsert_playlist_collaborator(
                 "role": payload.role,
                 "invitedById": current_user.id,
             }
+        )
+        playlist_audit_logger.info(
+            "USER %s invited collaborator %s as %s on playlist %s (%s)",
+            current_user.email,
+            target.email,
+            payload.role,
+            playlist.id,
+            playlist.title,
         )
     return _playlist_out(await _get_playlist_or_404(playlist.id), current_user)
 
@@ -294,6 +311,14 @@ async def update_playlist_collaborator(
     if collaborator is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Colaborador no encontrado")
     await prisma.playlistcollaborator.update(where={"id": collaborator.id}, data={"role": payload.role})
+    playlist_audit_logger.info(
+        "USER %s changed collaborator user_id=%s to %s on playlist %s (%s)",
+        current_user.email,
+        user_id,
+        payload.role,
+        playlist.id,
+        playlist.title,
+    )
     return _playlist_out(await _get_playlist_or_404(playlist.id), current_user)
 
 
@@ -312,4 +337,11 @@ async def remove_playlist_collaborator(
     if collaborator is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Colaborador no encontrado")
     await prisma.playlistcollaborator.delete(where={"id": collaborator.id})
+    playlist_audit_logger.info(
+        "USER %s revoked collaborator user_id=%s from playlist %s (%s)",
+        current_user.email,
+        user_id,
+        playlist.id,
+        playlist.title,
+    )
     return _playlist_out(await _get_playlist_or_404(playlist.id), current_user)

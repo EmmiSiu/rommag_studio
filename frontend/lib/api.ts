@@ -354,6 +354,7 @@ export type SystemMetrics = {
   active_users: number;
   audios_by_status: Record<string, number>;
   pending_moderation: number;
+  pending_playlist_moderation: number;
   total_audio_seconds: number;
 };
 
@@ -386,6 +387,21 @@ export function moderateAudio(
   reason?: string,
 ): Promise<AudioPublic> {
   return api<AudioPublic>(`/audios/${id}/moderate`, {
+    method: "PATCH",
+    body: { approve, reason },
+  });
+}
+
+export function listPlaylistModerationQueue(skip = 0, limit = 50): Promise<PlaylistPublic[]> {
+  return api<PlaylistPublic[]>(`/playlists/moderation/queue?skip=${skip}&limit=${limit}`);
+}
+
+export function moderatePlaylist(
+  id: string,
+  approve: boolean,
+  reason?: string,
+): Promise<PlaylistPublic> {
+  return api<PlaylistPublic>(`/playlists/${id}/moderate`, {
     method: "PATCH",
     body: { approve, reason },
   });

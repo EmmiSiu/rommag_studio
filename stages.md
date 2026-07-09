@@ -224,12 +224,12 @@
 - [x] pytest configurado con DB de test (fixtures con `TEST_DATABASE_URL`; integración real pendiente)
 - [ ] Tests de auth (registro, login, token expirado, roles)
 - [ ] Tests de permisos de audios (dueño/público/privado/admin)
-- [x] Tests unitarios de validación de subidas (magic bytes, sanitización) — 19 tests en `backend/tests/`; ffmpeg probe pendiente
+- [x] Tests unitarios de validación de subidas y permisos de playlist — 29 tests en `backend/tests/`, verificado 2026-07-09; ffmpeg probe pendiente
 - [ ] Cobertura ≥ 70% en `app/` (excluyendo workers pesados)
 
 ### Sprint 6.2 — Tests frontend
 
-- [x] `npm run typecheck` y `lint` sin errores (ESLint CLI + `tsc --noEmit`, verificado 2026-07-08)
+- [x] `npm run typecheck` y `lint` sin errores (ESLint CLI + `tsc --noEmit`, verificado 2026-07-09)
 - [ ] Tests de componentes críticos (auth forms, uploader) con Vitest/Testing Library
 - [ ] Un test E2E del flujo feliz con Playwright (contra stack de compose)
 
@@ -245,14 +245,14 @@
 - [x] Harness backend dividido por modo: unit, smoke, load, pipeline
 - [x] Harness frontend dividido por modo: smoke y perf/Lighthouse
 - [x] Reportes JSON/Markdown en `testing/reports`
-- [x] Scripts raíz: `test:backend`, `test:frontend`, `test:harness`, `perf:frontend`, `perf:pipeline`
+- [x] Scripts raíz: `test:backend`, `test:frontend`, `test:playlists`, `test:harness`, `perf:frontend`, `perf:pipeline`
 - [x] Documentación Mermaid de arquitectura, UX, UI, roadmap y harness en `docs/`
 
 ### Sprint 6.5 — Auditoría de salida
 
 - [x] Auditoría local de criterios Stage 6 en `docs/stage6-exit-audit.md`
 - [x] CI versionado con jobs backend, frontend y Docker (`.github/workflows/ci.yml`)
-- [x] Harness local reproduce checks principales antes de commit
+- [x] Harness local reproduce checks principales antes de commit *(actualizado 2026-07-09: detector `/docs` robusto y colaboración live opcional)*
 - [ ] Branch protection de `main` verificada en GitHub
 - [ ] PR controlado con bug intencional registrado como fallo de CI
 
@@ -270,8 +270,8 @@
 
 - [x] Runbook Easypanel versionado en `infra/easypanel/README.md`
 - [x] Template de variables productivas en `infra/easypanel/env.production.example`
-- [x] Scripts base de backup/restore: PostgreSQL y MinIO (`infra/ops/`)
-- [x] Harness `npm.cmd run prod:readiness` con reporte JSON/Markdown
+- [x] Scripts base de backup/restore: PostgreSQL y MinIO (`infra/ops/`; restore MinIO agregado 2026-07-09)
+- [x] Harness `npm.cmd run prod:readiness` con reporte JSON/Markdown y checks de restore/deploy *(verde 2026-07-09)*
 - [x] Diagrama operativo en `docs/production-readiness.md`
 
 ### Sprint 7.1 — Despliegue inicial
@@ -329,14 +329,14 @@ colecciones, colaboración y control fino de visibilidad.
 
 - [x] Roles por playlist: owner, editor, viewer
 - [x] Invitaciones por email de usuario existente, revocables desde UI
-- [ ] Auditoría mínima de cambios de colaboración
-- [ ] Harness frontend: flujo crear playlist → invitar → editar → revocar
+- [x] Auditoría mínima de cambios de colaboración (`audit.playlists`, 2026-07-09)
+- [x] Harness frontend: flujo crear playlist → invitar → editar → revocar (`npm.cmd run test:playlists`, live opcional; skip controlado sin URLs)
 
 ### Sprint 8.3 — Colecciones públicas
 
 - [x] Página pública de playlist aprobada
 - [x] Moderación de playlists públicas
-- [ ] Metadatos SEO por colección
+- [x] Metadatos SEO por colección
 - [ ] Lighthouse de páginas públicas ≥ 90 en accesibilidad y best practices
 
 **Criterios de salida Stage 8:**

@@ -1,6 +1,6 @@
 # Context Capsule
 
-Fecha de referencia: 2026-07-08.
+Fecha de referencia: 2026-07-09.
 
 Audio Inmersivo es una plataforma auto-alojada para ingestar audio desde
 YouTube o archivos locales, mejorarlo con IA y publicar renders binaurales,
@@ -14,8 +14,8 @@ Prisma/PostgreSQL, Redis/Celery, MinIO y servicios de audio.
   cache de modelos, benchmark de 4 minutos y carga de 5 audios.
 - Stage 3, 4, 5 y 6 estan en progreso con UI, PWA, admin y CI basicos.
 - Stage 6 esta avalado localmente, pero sus criterios finales dependen de branch protection y un PR de prueba en GitHub.
-- Stage 7 tiene readiness versionado: runbook Easypanel, env production, scripts backup/restore y harness `prod:readiness`; el cierre requiere VPS/dominio/HTTPS/restore real.
-- Stage 8 tiene base funcional: playlists, items, colaboradores owner/editor/viewer, moderacion publica y UI de studio.
+- Stage 7 tiene readiness versionado: runbook Easypanel, env production, scripts backup/restore PostgreSQL/MinIO y harness `prod:readiness`; el cierre requiere VPS/dominio/HTTPS/restore real.
+- Stage 8 tiene base funcional: playlists, items, colaboradores owner/editor/viewer, moderacion publica, auditoria minima y UI de studio/admin.
 
 ## Reglas de Trabajo
 
@@ -31,6 +31,7 @@ Prisma/PostgreSQL, Redis/Celery, MinIO y servicios de audio.
 ```text
 npm run test:backend
 npm run test:frontend
+npm run test:playlists
 npm run test:harness
 npm run perf:frontend
 npm run perf:pipeline

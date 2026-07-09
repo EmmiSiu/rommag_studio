@@ -4,6 +4,7 @@ Automated verification is split by runtime:
 
 - `npm run test:backend`: backend unit suite, with optional API smoke/load modes.
 - `npm run test:frontend`: frontend lint, typecheck and production build.
+- `npm run test:playlists`: optional live playlist collaboration flow.
 - `npm run test:harness`: backend and frontend smoke checks.
 - `npm run perf:frontend`: Lighthouse against `FRONTEND_URL`.
 - `npm run perf:pipeline`: pipeline readiness checks and benchmark instructions.
@@ -12,3 +13,8 @@ Automated verification is split by runtime:
 Reports are written to `testing/reports/` as JSON and Markdown. Browser checks
 run only when `FRONTEND_URL` is set. API smoke checks run only when `BACKEND_URL`
 or `API_URL` is set.
+
+The playlist collaboration harness requires both `FRONTEND_URL` and
+`BACKEND_URL`/`API_URL`. It registers ephemeral development users, logs in
+through the UI, creates a playlist, invites a collaborator, changes the role and
+revokes access.

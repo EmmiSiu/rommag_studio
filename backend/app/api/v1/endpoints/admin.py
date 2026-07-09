@@ -19,6 +19,7 @@ class SystemMetrics(BaseModel):
     active_users: int
     audios_by_status: dict[str, int]
     pending_moderation: int
+    pending_playlist_moderation: int
     total_audio_seconds: float
 
 
@@ -33,6 +34,9 @@ async def get_metrics(_admin: User = Depends(require_superadmin)) -> SystemMetri
     pending_moderation = await prisma.audio.count(
         where={"visibility": "PUBLIC", "isApproved": False, "status": "COMPLETED"}
     )
+    pending_playlist_moderation = await prisma.playlist.count(
+        where={"visibility": "PUBLIC", "isApproved": False}
+    )
     # Suma de duraciones conocidas (proxy del almacenamiento usado)
     completed = await prisma.audio.find_many(where={"durationSeconds": {"not": None}})
     total_audio_seconds = sum(a.durationSeconds or 0 for a in completed)
@@ -42,5 +46,6 @@ async def get_metrics(_admin: User = Depends(require_superadmin)) -> SystemMetri
         active_users=active_users,
         audios_by_status=audios_by_status,
         pending_moderation=pending_moderation,
+        pending_playlist_moderation=pending_playlist_moderation,
         total_audio_seconds=total_audio_seconds,
     )

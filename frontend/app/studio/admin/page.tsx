@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { BarChart3, CheckCircle2, Play, Users, type LucideIcon } from "lucide-react";
+import { BarChart3, CheckCircle2, ListMusic, Play, Users, type LucideIcon } from "lucide-react";
 
 import { StatusBadge, formatDuration } from "@/components/audio-card";
 import {
@@ -16,10 +16,13 @@ import {
   getMetrics,
   getStreamUrl,
   listModerationQueue,
+  listPlaylistModerationQueue,
   listUsers,
   moderateAudio,
+  moderatePlaylist,
   updateUser,
   type AudioPublic,
+  type PlaylistPublic,
   type SystemMetrics,
   type UserPublic,
 } from "@/lib/api";
@@ -41,14 +44,21 @@ export default function AdminPage() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [users, setUsers] = useState<UserPublic[]>([]);
   const [queue, setQueue] = useState<AudioPublic[]>([]);
+  const [playlistQueue, setPlaylistQueue] = useState<PlaylistPublic[]>([]);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [m, u, q] = await Promise.all([getMetrics(), listUsers(), listModerationQueue()]);
+      const [m, u, q, pq] = await Promise.all([
+        getMetrics(),
+        listUsers(),
+        listModerationQueue(),
+        listPlaylistModerationQueue(),
+      ]);
       setMetrics(m);
       setUsers(u);
       setQueue(q);
+      setPlaylistQueue(pq);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo cargar el panel");
     }
@@ -87,7 +97,9 @@ export default function AdminPage() {
           >
             <Icon className="h-4 w-4" aria-hidden />
             {label}
-            {key === "moderation" && queue.length > 0 ? ` (${queue.length})` : null}
+            {key === "moderation" && queue.length + playlistQueue.length > 0
+              ? ` (${queue.length + playlistQueue.length})`
+              : null}
           </button>
         ))}
       </div>
@@ -115,6 +127,11 @@ export default function AdminPage() {
           />
           <MetricCard label="Fallidos" value={String(metrics.audios_by_status.FAILED ?? 0)} hint="FAILED" />
           <MetricCard label="Pendientes de moderar" value={String(metrics.pending_moderation)} hint="públicos sin aprobar" />
+          <MetricCard
+            label="Playlists por moderar"
+            value={String(metrics.pending_playlist_moderation)}
+            hint="colecciones públicas"
+          />
           <MetricCard
             label="Audio procesado"
             value={`${Math.round(metrics.total_audio_seconds / 60)} min`}
@@ -177,53 +194,89 @@ export default function AdminPage() {
       {/* Moderación */}
       {tab === "moderation" && (
         <div className="mt-6 flex flex-col gap-2">
-          {queue.length === 0 ? (
-            <p className="py-8 text-center text-slate-400">No hay audios pendientes de moderación.</p>
+          {queue.length === 0 && playlistQueue.length === 0 ? (
+            <p className="py-8 text-center text-slate-400">No hay contenido pendiente de moderación.</p>
           ) : (
-            queue.map((audio) => (
-              <div
-                key={audio.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{audio.title}</p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {formatDuration(audio.duration_seconds)} · <StatusBadge status={audio.status} />
-                  </p>
+            <>
+              {queue.length > 0 && <h2 className="mt-2 text-sm font-semibold text-slate-300">Audios</h2>}
+              {queue.map((audio) => (
+                <div
+                  key={audio.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{audio.title}</p>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {formatDuration(audio.duration_seconds)} · <StatusBadge status={audio.status} />
+                    </p>
+                  </div>
+                  <div className="flex gap-2 text-xs">
+                    <button
+                      onClick={() =>
+                        void act(async () => {
+                          const { url } = await getStreamUrl(audio.id, "auto");
+                          window.open(url, "_blank", "noopener");
+                        })
+                      }
+                      className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-slate-300 hover:border-slate-500"
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <Play className="h-3.5 w-3.5" aria-hidden />
+                        Escuchar
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => void act(() => moderateAudio(audio.id, true))}
+                      className="rounded-lg bg-emerald-600 px-2.5 py-1.5 font-semibold text-white hover:bg-emerald-500"
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => {
+                        const reason = prompt("Motivo del rechazo (opcional):") ?? undefined;
+                        void act(() => moderateAudio(audio.id, false, reason));
+                      }}
+                      className="rounded-lg border border-red-500/40 px-2.5 py-1.5 text-red-300 hover:bg-red-500/10"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2 text-xs">
-                  <button
-                    onClick={() =>
-                      void act(async () => {
-                        const { url } = await getStreamUrl(audio.id, "auto");
-                        window.open(url, "_blank", "noopener");
-                      })
-                    }
-                    className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-slate-300 hover:border-slate-500"
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      <Play className="h-3.5 w-3.5" aria-hidden />
-                      Escuchar
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => void act(() => moderateAudio(audio.id, true))}
-                    className="rounded-lg bg-emerald-600 px-2.5 py-1.5 font-semibold text-white hover:bg-emerald-500"
-                  >
-                    Aprobar
-                  </button>
-                  <button
-                    onClick={() => {
-                      const reason = prompt("Motivo del rechazo (opcional):") ?? undefined;
-                      void act(() => moderateAudio(audio.id, false, reason));
-                    }}
-                    className="rounded-lg border border-red-500/40 px-2.5 py-1.5 text-red-300 hover:bg-red-500/10"
-                  >
-                    Rechazar
-                  </button>
+              ))}
+
+              {playlistQueue.length > 0 && <h2 className="mt-4 text-sm font-semibold text-slate-300">Playlists</h2>}
+              {playlistQueue.map((playlist) => (
+                <div
+                  key={playlist.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{playlist.title}</p>
+                    <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-slate-400">
+                      <ListMusic className="h-4 w-4" aria-hidden />
+                      {playlist.items_count} audios
+                    </p>
+                  </div>
+                  <div className="flex gap-2 text-xs">
+                    <button
+                      onClick={() => void act(() => moderatePlaylist(playlist.id, true))}
+                      className="rounded-lg bg-emerald-600 px-2.5 py-1.5 font-semibold text-white hover:bg-emerald-500"
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => {
+                        const reason = prompt("Motivo del rechazo (opcional):") ?? undefined;
+                        void act(() => moderatePlaylist(playlist.id, false, reason));
+                      }}
+                      className="rounded-lg border border-red-500/40 px-2.5 py-1.5 text-red-300 hover:bg-red-500/10"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </>
           )}
         </div>
       )}
